@@ -647,14 +647,59 @@ function setDocumentScrollTop(ypos)
    <li><code>RewardPolicy</code></li> 
    <li><code>ProjectFactory</code></li> 
   </ul> </li> 
+ <li> <p><em><strong>On-chain First</strong></em></p> 
+  <ul> 
+   <li>Minimize off-chain usage</li> 
+  </ul> </li> 
  <li> <p><em><strong>More Fluent API using ABIEncoderV2</strong></em></p> 
   <ul> 
    <li>Dyanmic array or struct in function parameters and outputs</li> 
   </ul> </li> 
+ <li> <p><em><strong>Follow EIP Standars</strong></em></p> </li> 
  <li> <p><em><strong>Secure Contract</strong></em></p> 
   <ul> 
    <li>Code inspection using <code>MythX</code>(ConsenSys), <code>Slither</code>, and <code>Solhint</code> </li> 
    <li>Thorough uint testing</li> 
+  </ul> </li> 
+</ul> 
+<h3> <a id="implementation-principle" class="anchor" href="#implementation-principle" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Implementation Principle</h3> 
+<ul> 
+ <li> <em><strong>Resue Best Practices</strong></em> 
+  <ul> 
+   <li> <p><a href="https://github.com/OpenZeppelin/openzeppelin-contracts"><code>OpenZeppelin Contract</code></a> library</p> 
+    <ul> 
+     <li>v3.2.0 for Solidity 0.6.x compatibility</li> 
+    </ul> 
+    <table> 
+     <thead> 
+      <tr> 
+       <th>Library</th> 
+       <th>Description</th> 
+      </tr> 
+     </thead> 
+     <tbody> 
+      <tr> 
+       <td><a href="https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/GSN/Context.sol"><code>Context</code></a></td> 
+       <td></td> 
+      </tr> 
+      <tr> 
+       <td><a href="https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.2.0/contracts/access/AccessControl.sol"><code>AccessControl</code></a></td> 
+       <td></td> 
+      </tr> 
+      <tr> 
+       <td><a href="https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/math/SafeMath.sol"><code>SafeMath</code></a></td> 
+       <td>overflow free arithmetics</td> 
+      </tr> 
+      <tr> 
+       <td><a href="https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/EnumerableSet.sol"><code>EnumerableSet.AddressSet</code></a></td> 
+       <td></td> 
+      </tr> 
+      <tr> 
+       <td><a href="https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/EnumerableMap.sol"><code>EnumerableMap.UintToAddressMap</code></a></td> 
+       <td></td> 
+      </tr> 
+     </tbody> 
+    </table> </li> 
   </ul> </li> 
 </ul>
 </body>
