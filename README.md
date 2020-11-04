@@ -1,12 +1,15 @@
 ### Development Principles
 
-### Design Principles
-
+#### Design Principles
 
 * ***Extended Domain Model***
     * Inclusive and extended
     * `RewardPolicy`
     * `ProjectFactory`
+    
+* ***Modulization***
+    * Divide and Conquerß
+    * High Cohesion and Low Coupling
     
 * ***On-chain First***
     * Minimize off-chain usage
@@ -20,11 +23,11 @@
     * Code inspection using `MythX`(ConsenSys), `Slither`, and `Solhint`
     * Thorough uint testing
 
-* ***Formal Contract API Documentation**
+* ***Formal Contract API Documentation***
 
 ----
 
-### Implementation Principles
+#### Implementation Principles
 
 * ***Resue Best Practices***
     * [`OpenZeppelin Contract`](https://github.com/OpenZeppelin/openzeppelin-contracts) library
@@ -41,7 +44,7 @@
 
 ----
 
-### Test Principles
+#### Test Principles
 
 * ***Testing in Testnets via Infura***
         
@@ -58,10 +61,11 @@
 | [ChanceJS API](https://chancejs.com/index.html) |   |
 | [JavaScript Standard Built-in Objects](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects) | `Array`, `JSON`, `Map`, `Promise`, `RegExp`, `String`, ... |
 
+----
 
-#### Sketch
+### Sketch
 
-##### Pseudo Codes for Contracts
+#### Pseudo Codes for Contracts
 
 ```javascript
 
