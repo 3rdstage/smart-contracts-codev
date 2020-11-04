@@ -1,5 +1,5 @@
 pragma solidity ^0.6.0;
-
+//pragma experimental ABIEncoderV2;
 
 import "../../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
 
@@ -34,6 +34,7 @@ contract ProjectL{
         }        
     }
     
+    // will retrun empty array at initial state
     function getVoters() public view returns (address[] memory){
         uint l = voters.length();
         

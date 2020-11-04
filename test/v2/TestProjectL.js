@@ -63,6 +63,15 @@ contract("ProjectL Uint Tests", async accounts => {
   });
   
   
+  it("Has no voters initially", async() => {
+    
+    const [chance, amdin, project] = await createFixtures();
+    
+    const voters = await project.getVoters();
+    console.log(voters);
+    
+  });
+  
   // setVoters(), getVoters()
   it("Can specify voters", async() =>{
     const [chance, admin, project] = await createFixtures();

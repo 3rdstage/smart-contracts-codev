@@ -36,8 +36,9 @@ module.exports = {
   // http://truffleframework.com/docs/advanced/configuration
   compilers: {
     solc: {
-      version: "^0.6.0",
+      version: "0.6.12",
       // version: "^0.6.0",
+      parser: "solcjs",
       settings: {
         optimizer: {
           enabled: false,
