@@ -13,6 +13,8 @@
     
 * ***On-chain First***
     * Minimize off-chain usage
+    * Iteration using only on-chain data
+        * `findContributionsByProject(int projectId)`
     
 * ***More Fluent API using ABIEncoderV2***
     * Dyanmic array or struct in function parameters and outputs
@@ -29,6 +31,19 @@
 
 #### Implementation Principles
 
+* ***Safe Operation***
+    * No safe casting from address type to Contract type
+    * Solidity's `mapping` is ***NOT iteratable***.
+        * Use OpenZeppelin's `EnumerableMap.UintToAddressMap` or auxiliary data for index
+            ````
+            mapping(uint256 => mapping(address => Contrib)) private contribs;  // contributions by project, main collections
+            mapping(uint256 => address[]) private contributors;                // contributors by project, auxiliary index for `contribs`
+            
+            function getContributorsByProject(uint256 _prjId) public view returns (address[] memory);
+            function getContribution(uint256 _prjId, address _contributor) public view returns (string memory, string memory, bytes32);
+            
+            ````
+            
 * ***Resue Best Practices***
     * [`OpenZeppelin Contract`](https://github.com/OpenZeppelin/openzeppelin-contracts) library
         * v3.2.0 for Solidity 0.6.x compatibility
