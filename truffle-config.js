@@ -19,8 +19,8 @@ module.exports = {
       host: ganache.host,
       port: ganache.port,
       network_id: ganache.net,
-      gas: 4E8,
-      gasPrice: 2.5E10,
+      gas: 4E7,
+      gasPrice: 2E10,
       websockets: ganache.websocket
     }
   },

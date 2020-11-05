@@ -3,20 +3,6 @@ const Chance = require('chance');
 const toBN = web3.utils.toBN;
 const { constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
-//References
-//Truffle test in JavaScript : https://www.trufflesuite.com/docs/truffle/testing/writing-tests-in-javascript
-//Truffle Contract Guide : https://www.trufflesuite.com/docs/truffle/getting-started/interacting-with-your-contracts
-//Truffle Contract Package : https://github.com/trufflesuite/truffle/tree/master/packages/contract
-//Mocha Documentation : https://mochajs.org/#getting-started
-//Chai Assert API : https://www.chaijs.com/api/assert/
-//Chai Expect/Should API : https://www.chaijs.com/api/bdd/
-//OpenZeppelin Test Helpers API : https://docs.openzeppelin.com/test-helpers/0.5/api
-//web3 API : https://web3js.readthedocs.io/en/v1.2.11/
-//chance.js : https://chancejs.com/
-//bn.js : https://github.com/indutny/bn.js/
-//JavaScript Reference (MDN) : https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference
-//The Modern JavaScript Tutorial : http://javascript.info/
-
 contract("ProjectL Uint Tests", async accounts => {
   
   'use strict';
