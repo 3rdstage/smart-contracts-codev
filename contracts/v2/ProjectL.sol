@@ -13,7 +13,6 @@ contract ProjectL{
     
     EnumerableSet.AddressSet private voters;
     
-    
     constructor(uint256 _id, string memory _name) public{
         id = _id;
         name = _name;
