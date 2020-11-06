@@ -4,11 +4,11 @@
 
 * ***Extended Domain Model***
     * Inclusive and extended
-    * `RewardPolicy`
-    * `ProjectFactory`
+    * `RewardPolicy` - pluggable logic
+    * `ProjectFactory` - factory pattern
     
 * ***Modulization***
-    * Divide and Conquerß
+    * Divide and Conquer
     * High Cohesion and Low Coupling
     
 * ***On-chain First***
@@ -43,7 +43,11 @@
             function getContribution(uint256 _prjId, address _contributor) public view returns (string memory, string memory, bytes32);
             
             ````
-            
+     * Solidity has not `set` container.
+         * Use OpenZeppelin's `EnumerableSet`
+     * Soldity has no built-in referential integrity mechanism
+         *  Gurauntee referential integrity by smart contract - not by off-chain or DApp
+                   
 * ***Resue Best Practices***
     * [`OpenZeppelin Contract`](https://github.com/OpenZeppelin/openzeppelin-contracts) library
         * v3.2.0 for Solidity 0.6.x compatibility

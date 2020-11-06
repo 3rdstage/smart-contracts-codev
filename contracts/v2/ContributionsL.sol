@@ -67,5 +67,12 @@ contract ContributionsL is Context, AccessControl{
         
         return (cntrb.title, cntrb.docUrl, cntrb.docHash);
     }
+    
+    function hasContribution(uint256 _prjId, address _contributor) public view returns (bool){
+        if(!projectManager.hasProject(_prjId)) return false;
+        
+        if(contribs[_prjId][_contributor].owner == address(0)) return false;
+        return true;
+    }
 
 }

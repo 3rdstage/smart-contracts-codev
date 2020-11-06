@@ -39,15 +39,15 @@ contract ProjectManagerL is Context, AccessControl{
         emit ProjectCreated(id, addr);
     }
     
-    function getNumberOfProjects() public view returns (uint256){
+    function getNumberOfProjects() external view returns (uint256){
         return projects.length();
     }
     
-    function hasProject(uint256 _prjId) public view returns (bool){
+    function hasProject(uint256 _prjId) external view returns (bool){
         return projects.contains(_prjId);
     }
     
-    function getProjectAddress(uint256 _prjId) public view returns (address){
+    function getProjectAddress(uint256 _prjId) external view returns (address){
         require(projects.contains(_prjId), "ProjectManager: There's no project with the specified project ID.");
         
         return projects.get(_prjId);
