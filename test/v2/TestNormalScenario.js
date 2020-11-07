@@ -48,6 +48,7 @@ contract("Integrated test for normal scenario", async accounts => {
     const contractAddrs = {};
     const projects = [];
     const contribs = [];
+    const votes = [];
     
     // Deploy Conracts
     const prjMgrContr = await ProjectManagerContract.new({from: admin});  
@@ -88,33 +89,38 @@ contract("Integrated test for normal scenario", async accounts => {
       vtrs = await prjContr.getVoters();
 
       assert.sameMembers(vtrs, voters, `Voters for the project ${prj.id} has NOT been set correctly.`);
-      prj.voters = vtrs;
+      prj.voters = vtrs.toString();
     }
 
     console.log("Voters Assigned");
     console.table(projects, ['id', 'voters']);
     
-    // add 2 contributions to the first project
-    expectEvent(
-      await contribsContr.addOrUpdateContribution(toBN(projects[0].id), contributors[0], "C1", {from: admin}),
-      'ContributionAdded', {0: toBN(projects[0].id), 1: contributors[0]});
-    contribs.push({projectId: projects[0].id, contributor: contributors[0], title: "C1"});
+    // Register 2 contributions to the first project
+    contribs.push({project: projects[0].id, contributor: contributors[0], title: "C1"});
+    contribs.push({project: projects[0].id, contributor: contributors[1], title: "C2"});
     
-    expectEvent(
-      await contribsContr.addOrUpdateContribution(toBN(projects[0].id), contributors[1], "C2", {from: admin}),
-      'ContributionAdded', {0: toBN(projects[0].id), 1: contributors[1]});
-    contribs.push({projectId: projects[0].id, contributor: contributors[0], title: "C1"});
-    
+    for(const cntr of contribs){
+      expectEvent(
+        await contribsContr.addOrUpdateContribution(toBN(cntr.project), cntr.contributor, cntr.title, {from: admin}),
+        'ContributionAdded', {0: toBN(cntr.project), 1: cntr.contributor});
+    }
     console.log("Contributions Registered");
     console.table(contribs);
     
-    // vote for the first project
-    expectEvent(
-      await votesContr.vote(toBN(projects[0].id), contributors[0], toBN(4E18), {from: voters[0]}),
-      'Voted', {0: toBN(projects[0].id), 1: voters[0], 2: contributors[0], 3: 4E18});
+    // Vote on the first project
+    votes.push({project: projects[0].id, voter: voters[0], votee: contributors[0], amount: 4E18});
+    votes.push({project: projects[0].id, voter: voters[1], votee: contributors[0], amount: 5E18});
+    votes.push({project: projects[0].id, voter: voters[2], votee: contributors[1], amount: 6E18});
+    
+    for(const vt of votes){
+      expectEvent(
+        await votesContr.vote(toBN(vt.project), vt.votee, toBN(vt.amount), {from: vt.voter}),
+        'Voted', {0: toBN(vt.project), 1: vt.voter, 2: vt.votee, 3: toBN(vt.amount)});
+    }
+    console.log("First Project Voted");
+    console.table(votes);
 
 
-    console.table(contributions); 
     
   });
 });

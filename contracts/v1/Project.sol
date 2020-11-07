@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >0.6.6 <0.7.0;
-import "../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
-import "../node_modules/@openzeppelin/contracts/utils/Address.sol";
-import "../node_modules/@openzeppelin/contracts/GSN/Context.sol";
+import "../../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
+import "../../node_modules/@openzeppelin/contracts/utils/Address.sol";
+import "../../node_modules/@openzeppelin/contracts/GSN/Context.sol";
 import "./ERC20PresetMinterPauser.sol";
-import "../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
-import "../node_modules/@openzeppelin/contracts/utils/EnumerableMap.sol";
-import "../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
+import "../../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
+import "../../node_modules/@openzeppelin/contracts/utils/EnumerableMap.sol";
+import "../../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
 
 
 contract Project is Context ,AccessControl {
