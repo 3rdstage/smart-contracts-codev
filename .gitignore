@@ -48,7 +48,9 @@ contracts/**/artifacts/
 # don't ignore OpenZeppelin contracts
 !/node_modules/@openzeppelin/
 /node_modules/@openzeppelin/*
-!/node_modules/@openzeppelin/contracts/**/*.sol
+!/node_modules/@openzeppelin/contracts/
+/node_modules/@openzeppelin/contracts/build
+/node_modules/@openzeppelin/contracts/package.json
 
 
 
