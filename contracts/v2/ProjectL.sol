@@ -1,5 +1,5 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.6.0;
-//pragma experimental ABIEncoderV2;
 
 import "../../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
 
@@ -27,7 +27,8 @@ contract ProjectL{
     } 
   
     
-    function setVoters(address[] memory _voters) public{
+    function assignVoters(address[] memory _voters) public{
+        
         uint256 l = voters.length();
         
         for(uint256 i = l; i > 0; i--){

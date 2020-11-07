@@ -1,5 +1,5 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.6.0;
-//pragma experimental ABIEncoderV2;
 
 import "../../node_modules/@openzeppelin/contracts/GSN/Context.sol";
 import "../../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
@@ -42,6 +42,8 @@ contract ProjectManagerL is Context, AccessControl{
     function getNumberOfProjects() external view returns (uint256){
         return projects.length();
     }
+    
+    //@TODO getProjectIds - getting IDs of all projects
     
     function hasProject(uint256 _prjId) external view returns (bool){
         return projects.contains(_prjId);

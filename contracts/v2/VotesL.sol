@@ -1,10 +1,10 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
 import "../../node_modules/@openzeppelin/contracts/GSN/Context.sol";
 import "../../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
 import "../../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
-//import "../../node_modules/@openzeppelin/contracts/utils/EnumerableMap.sol";
 import "../../node_modules/@openzeppelin/contracts/utils/Counters.sol";
 import "./ProjectManagerL.sol";
 import "./ContributionsL.sol";
@@ -18,12 +18,10 @@ contract VotesL is Context, AccessControl{
         uint256 amount;
     }
 
-    /**
-     * votes by project and voter
-     */
+     // votes by project and voter
     mapping(uint256 => mapping(address => Vote)) private votes;    // (project, voter) => (votee, amount)
     
-    mapping(uint256 => EnumerableSet.AddressSet) private voters;   // project => voters, for safe access or iteration
+    mapping(uint256 => EnumerableSet.AddressSet) private voters;   // project => voters, keys of votes, for safe access or iteration
     
     ProjectManagerL private projectManager;  // project manager contract
     
@@ -87,8 +85,6 @@ contract VotesL is Context, AccessControl{
         for(uint256 i = 0; i < l; i++) vts[i] = votes[_prjId][voters[_prjId].at(i)];
         return vts;
     }
-    
-    
-
 }
+
     
