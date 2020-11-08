@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >0.6.6 <0.7.0;
-import "../../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
-import "../../node_modules/@openzeppelin/contracts/utils/Address.sol";
-import "../../node_modules/@openzeppelin/contracts/GSN/Context.sol";
+pragma experimental ABIEncoderV2;
+import "../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
+import "../node_modules/@openzeppelin/contracts/utils/Address.sol";
+import "../node_modules/@openzeppelin/contracts/GSN/Context.sol";
 import "./ERC20PresetMinterPauser.sol";
-import "../../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
-import "../../node_modules/@openzeppelin/contracts/utils/EnumerableMap.sol";
-import "../../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
+import "../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
+import "../node_modules/@openzeppelin/contracts/utils/EnumerableMap.sol";
+import "../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
+import "./AbstractRewardPolicy.sol";
+import "./IRewardPolicy.sol";
 
 
 contract Project is Context ,AccessControl {
@@ -16,7 +19,6 @@ contract Project is Context ,AccessControl {
     //libraries
     using SafeMath for uint256;
     using Address for address;
-
     using EnumerableSet for EnumerableSet.AddressSet; 
     //meta variables
     struct Voter {
@@ -28,7 +30,8 @@ contract Project is Context ,AccessControl {
 
     struct TargetCompany {
         address companyAddress;
-        uint totalAmount;
+        uint256 votedAmount;
+
     }
 
     struct WinningCompany {
@@ -39,6 +42,7 @@ contract Project is Context ,AccessControl {
     //storage variables
     Voter[] private votersArr;
     //TargetCompany[] private companyArr;
+    //TargetCompany[] private companyArr;
 
     EnumerableSet.AddressSet private voterAddressSet;
     EnumerableSet.AddressSet private companyAddressSet;
@@ -48,10 +52,11 @@ contract Project is Context ,AccessControl {
 
     address private projectOwner;
     uint256 private projectEndTime;
-    address private rewardPolicy;
+    //address private rewardPolicy;
     ERC20PresetMinterPauser token;
     bool endProject;
     string private projectName;
+    IRewardPolicy rewardPolicy;
     //Events
     event VoterAdded();
     event CompanyAdded();
@@ -66,8 +71,12 @@ contract Project is Context ,AccessControl {
         token = _token;
         projectEndTime = block.timestamp + _endTime;
         endProject = false;
-        rewardPolicy = _rewardPolicy;
+        rewardPolicy = IRewardPolicy(_rewardPolicy);
         
+    }
+    
+    function setRewardPolicy(address _rewardPolicy) external{
+        rewardPolicy = IRewardPolicy(_rewardPolicy);
     }
 
     function addVoter(address _voterAccount) external {
@@ -107,7 +116,7 @@ contract Project is Context ,AccessControl {
         voter.voted = true;
         voter.voteeAccount = company.companyAddress;
 
-        company.totalAmount += _voteAmount;
+        company.votedAmount += _voteAmount;
 
     }
 
@@ -126,7 +135,7 @@ contract Project is Context ,AccessControl {
         //[{0x...,100},{0x..., 1000}, {0x..., 2000}]
 
         _generateWinner();
-        // _rewardToVoter();
+        //_rewardToVoter();
         // _rewardToCompany();
 
     }
@@ -136,34 +145,60 @@ contract Project is Context ,AccessControl {
         require(hasRole(ADMIN_ROLE, _msgSender()), "rewardToVoter() must have admin role to create.");
 
         //mapping converto structure array
+        //= new TargetCompany[](companyAddressSet.length());
+        //will move to util
         TargetCompany[] memory companyArr = new TargetCompany[](companyAddressSet.length());
-        
         for( uint256 i = 1; i <= companyAddressSet.length(); i++){
             companyArr[i] = targetCompanys[companyAddressSet.at(i)]; 
         }
-        // will move to rewardPolicy
-        uint256 max = 0;
-        address winner = address(0);
-        for( uint256 i = 0; i <= companyArr.length; i++){
 
-            if( max <  companyArr[i].totalAmount){
-                //max = targetCompanys[targetAddressSet.at(i)].totalAmount;
-                winner = companyArr[i].companyAddress;
-            }
-        }
-        //rewardPolicy.rewardToVoter();
+        //     환경 성과 평가 대상 기업 Voting 결과를 확인한다.
+        //      e.g. A기업 : X득표, B기업 : Y득표
+        //      => X = 6 ESV,  Y = 4 ESV 
+        //      => A기업 득표율 : 60% (득표율 = 100% x X/(X+Y))
+        //      => B기업 득표율 : 40% (득표율 = 100% x Y/(X+Y))
+        //       10. Reward의 70%를 Voting 결과 대상 업체들에게 Token으로 보상 Smart Contract
+        //  -. Voting 대상 기업들에게 Voting 득표율에 따른 Token보상 자동화(배당률 : 전체 Reward Pot의 70%)
+        //     => A기업 Reward = Reward용 Token x A기업 득표율 x 배당률 = 100 ESV x 60% x 70% = 42 ESV
+        //     => B기업 Reward = Reward용 Token x B기업 득표율 x 배당률 = 100 ESV x 40% x 70% = 28 ESV
+        //      11. Reward의 30%는 Voter들에게 분배(Top1 Voter에게 1.5배 지정) Smart Contract
+        //  -. reward 로직은 아래와 같다
+        //   1) Voter들에게 Reward 보상(배당률 : 전체 Reward Pot의 30%) 기준
+        //     - Top1 Voter들에게 1.5배 배정, 나머지 Voter들에게는 1배 배정
+        //     - Voting 모수 = Top1기업에게 Voting한 Total ESV x 1.5 + 나머지 기업에 Voting한 Total ESV x 1.0
+        //       => Top1기업에게 Voting한 Voter = Voting ESV x Reward 배당률(30%) x 1.5배 / (Voting모수)
+        //       => 나머지 기업에 Voting한 Voter = Voting ESV x Reward 배당률(30%) x 1.0배 / (Voting모수)
+        //   2) Voter들에게 Reward 보상 예
+        //     - Voter1은 A기업에 3 ESV vote => 3 ESV x 30% x 1.5 / ((6 ESV * 1.5) + (4 ESV * 1.0)) = 10.38 ESV → Voter1에게 제공
+        //     - Voter2는 A기업에 3 ESV vote => 3 ESV x 30% x 1.5 / ((6 ESV * 1.5) + (4 ESV * 1.0)) = 10.38 ESV → Voter2에게 제공
+        //     - Voter3는 B기업에 4 ESV vote => 4 ESV x 30% x 1.0 / ((6 ESV * 1.5) + (4 ESV * 1.0)) =   9.23 ESV → Voter3에게 제공
+        // for( uint256 i = 0; i <= companyArr.length(); i++){
+
+        //     if( max <  companyArr[i].totalAmount){
+        //         //max = targetCompanys[targetAddressSet.at(i)].totalAmount;
+        //         winner = companyArr[i].companyAddress;
+        //     }
+        // }
+        //logic
+
+        //_rewardToVoter(companyArr);
+        _rewardToCompany(companyArr);
     }
-    // function _rewardToVoter() internal {
+    // function _rewardToVoter(TargetCompany[] memory _companyArray) internal {
     //     require(endProject == true, "Project is not ended.");
     //     require(hasRole(ADMIN_ROLE, _msgSender()), "rewardToVoter() must have admin role to create.");
         
-    //     //rewardPolicy.rewardToVoter();
+    //     rewardPolicy.rewardToVoter(_companyArray);
     // }
-
-    // function _rewardToCompany() internal {
-    //     require(endProject == true, "Project is not ended.");
-    //     require(hasRole(ADMIN_ROLE, _msgSender()), "rewardToCompany() must have admin role to create.");
-
-    //     //rewardPolicy.rewardToCompany();
-    // }
+    
+    function _rewardToCompany(TargetCompany[] memory _companyArray) internal {
+        require(endProject == true, "Project is not ended.");
+        require(hasRole(ADMIN_ROLE, _msgSender()), "rewardToVoter() must have admin role to create.");
+        //
+        // uint256[] memory t = new uint256[](3);
+        // Voter[] memory ty = new Voter[](3);
+        // address[] memory tyt = new address[](3);
+        //??? 시작 확인이 좀 필요하다.
+        //rewardPolicy.rewardToCompany(_companyArray);
+    }
 }

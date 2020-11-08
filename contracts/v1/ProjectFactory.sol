@@ -2,11 +2,11 @@
 pragma solidity ^0.6.0;
 
 import "./Project.sol";
-import "../../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
-import "../../node_modules/@openzeppelin/contracts/utils/Address.sol";
+import "../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
+import "../node_modules/@openzeppelin/contracts/utils/Address.sol";
 import "./ERC20PresetMinterPauser.sol";
-import "../../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
-import "../../node_modules/@openzeppelin/contracts/utils/EnumerableMap.sol";
+import "../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
+import "../node_modules/@openzeppelin/contracts/utils/EnumerableMap.sol";
 
 contract ProjectFactory is AccessControl {
     bytes32 public constant ADMIN_ROLE = keccak256("ADMIN_ROLE");

@@ -2,11 +2,11 @@
 
 pragma solidity ^0.6.0;
 
-import "../../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
-import "../../node_modules/@openzeppelin/contracts/GSN/Context.sol";
-import "../../node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "../../node_modules/@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
-import "../../node_modules/@openzeppelin/contracts/token/ERC20/ERC20Pausable.sol";
+import "../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
+import "../node_modules/@openzeppelin/contracts/GSN/Context.sol";
+import "../node_modules/@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "../node_modules/@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
+import "../node_modules/@openzeppelin/contracts/token/ERC20/ERC20Pausable.sol";
 
 /**
  * @dev {ERC20} token, including:
