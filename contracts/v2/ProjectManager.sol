@@ -15,13 +15,14 @@ contract ProjectManagerL is Context, AccessControl{
     using Counters for Counters.Counter;
     using EnumerableMap for EnumerableMap.UintToAddressMap;
     using EnumerableSet for EnumerableSet.AddressSet;
-    
-    enum ProjectState{
-        VoteNotStarted,      // voters can not vote yet
-        VoteStarted,         // voters can vote
-        VoteEnded,           // vote is finished. - all voters have voted or some voters have given up.
-        Rewarded            // rewards are distributed to contributors and voters
-    }
+  
+// Not yet used, not deleted for later use.    
+//    enum ProjectState{
+//        VoteNotStarted,      // voters can not vote yet
+//        VoteStarted,         // voters can vote
+//        VoteEnded,           // vote is finished. - all voters have voted or some voters have given up.
+//        Rewarded            // rewards are distributed to contributors and voters
+//    }
     
     Counters.Counter private projectCnter;
     
@@ -31,7 +32,7 @@ contract ProjectManagerL is Context, AccessControl{
     
     EnumerableSet.AddressSet private rewardModelAddrs; // keys for rewardModels;
 
-    event ProjectCreated(uint256 indexed id, address addr);
+    event ProjectCreated(uint256 indexed id, address addr, uint256 totalReward, uint8 contirbPercent, address rewardModelAddr);
 
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Aadmin role is required to do this");
@@ -42,21 +43,31 @@ contract ProjectManagerL is Context, AccessControl{
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    function createProject(string memory _name) public onlyAdmin{
+//    function createProject(string memory _name) public onlyAdmin{
+//        projectCnter.increment();
+//        uint256 id = projectCnter.current();
+//        // new project is NEVER expected to be included in the `projects` already
+//        assert(!projects.contains(id));
+//        
+//        ProjectL prj = new ProjectL(id, _name);
+//        address addr = address(prj);
+//        projects.set(id, addr);
+//        
+//        emit ProjectCreated(id, addr);
+//    }
+    
+    function createProject(string memory _name, uint256 _totalReward, uint8 _contribPerct, address _rewardModelAddr) public onlyAdmin{
+        require(rewardModelAddrs.contains(_rewardModelAddr), "ProjectManager: The specified reward model is NOT registered yet. Register a reward model before assigning it to a project.");
+
         projectCnter.increment();
         uint256 id = projectCnter.current();
-        // new project is NEVER expected to be included in the `projects` already
-        assert(!projects.contains(id));
+        assert(!projects.contains(id)); // not require but assert - The project ID is managed internally.
         
-        ProjectL prj = new ProjectL(id, _name);
+        ProjectL prj = new ProjectL(id, _name, _totalReward, _contribPerct, _rewardModelAddr);
         address addr = address(prj);
         projects.set(id, addr);
         
-        emit ProjectCreated(id, addr);
-    }
-    
-    function createProject(string memory _name, uint256 totalReward, uint8 contribPrect) public onlyAdmin{
-        //@TODO        
+        emit ProjectCreated(id, addr, _totalReward, _contribPerct, _rewardModelAddr);
     }
     
     
@@ -75,7 +86,7 @@ contract ProjectManagerL is Context, AccessControl{
         
         return projects.get(_prjId);
     }
-    
+
     function registerRewardModel(address _modelAddr) public onlyAdmin{
         // Expecting that reward models would not so many, at most tens of models.
         
@@ -98,10 +109,32 @@ contract ProjectManagerL is Context, AccessControl{
         
         addr = rewardModelAddrs.at(_index);
         name = rewardModels[addr];
-    }    
-
+    }
     
-    function distrubteReward(uint256 _prjId) public onlyAdmin{
+    function _findProject(uint256 _prjId) internal view returns (ProjectL){
+        require(projects.contains(_prjId), "ProjectManager: There's no project with the specified project ID.");
+        
+        return ProjectL(projects.get(_prjId));
+    }
+
+    function _setProjectRewarded(uint256 _prjId) internal onlyAdmin{
+        ProjectL prj = _findProject(_prjId);
+        prj.setRewarded();
+    }
+    
+    function setProjectRewardScale(uint256 _prjId, uint256 _total, uint8 _contribPerct) external onlyAdmin{
+        ProjectL prj = _findProject(_prjId);
+        
+        prj.setRewardScale(_total, _contribPerct);
+    }
+
+    function assignProjectVoters(uint256 _prjId, address[] calldata _voters) external onlyAdmin{
+        ProjectL prj = _findProject(_prjId);
+        
+        prj.assignVoters(_voters);
+    }
+
+    function distrubteRewards(uint256 _prjId) public onlyAdmin{
         
         // @TODO
         
@@ -112,7 +145,5 @@ contract ProjectManagerL is Context, AccessControl{
         //model.calcContributorRewards(100000000, vts);
         
     }
-    
-    
-    
+
 }

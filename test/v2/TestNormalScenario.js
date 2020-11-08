@@ -2,6 +2,10 @@ const ProjectManagerContract = artifacts.require("ProjectManagerL");
 const ProjectContract = artifacts.require("ProjectL");
 const ContributionsContract = artifacts.require("ContributionsL");
 const VotesContract = artifacts.require("VotesL");
+const IRewardModelContract = artifacts.require("IRewardModelL");
+const Only2VoteesAllowedModelContract = artifacts.require("Only2VoteesAllowedModelL");
+const Top2RewardedModelContract = artifacts.require("Top2RewardedModelL");
+const WinnerTakesAllModelContract = artifacts.require("WinnerTakesAllModelL");
 const Chance = require('chance');
 const toBN = web3.utils.toBN;
 const { constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
@@ -24,7 +28,6 @@ contract("Integrated test for normal scenario", async accounts => {
   }
   
   before(async() => {
-    
     assert.isAtLeast(accounts.length, 8, "There should at least 8 accounts to run this test.");
     
     const table = [];
@@ -45,13 +48,21 @@ contract("Integrated test for normal scenario", async accounts => {
     const admin = accounts[0];
     const contributors = [accounts[2], accounts[3], accounts[4]];
     const voters = [accounts[5], accounts[6], accounts[7]];
-    const contractAddrs = {};
-    const projects = [];
-    const contribs = [];
-    const votes = [];
+    const projects = []; // fill later
+    const contribs = []; // fill later
+    const votes = []; // fill later
+    const rewardModelContrs = []; // reward model contracts, fill right below
+    const contractAddrs = {}; // fill later
     
     // Deploy Conracts
-    const prjMgrContr = await ProjectManagerContract.new({from: admin});  
+    rewardModelContrs.push(await Only2VoteesAllowedModelContract.new({from: admin}));
+    rewardModelContrs.push(await Top2RewardedModelContract.new({from: admin}));
+    rewardModelContrs.push(await WinnerTakesAllModelContract.new({from: admin}));
+    
+    const prjMgrContr = await ProjectManagerContract.new({from: admin});
+    for(const mdl of rewardModelContrs){
+      await prjMgrContr.registerRewardModel(mdl.address, {from: admin});
+    }
     const contribsContr = await ContributionsContract.new(prjMgrContr.address, {from: admin});
     const votesContr = await VotesContract.new(prjMgrContr.address, contribsContr.address, {from: admin});
     
@@ -61,35 +72,37 @@ contract("Integrated test for normal scenario", async accounts => {
     
     console.log("Smart Contract Addresses");
     console.table(contractAddrs);
-
     
     // Check initial state
     assert.isTrue((await prjMgrContr.getNumberOfProjects()).eqn(0), "initially there should be no project yet.");
-
   
     // Setup initial data  
     // Create 2 projects
+    projects.push({name: 'p1', totalReward: toBN(1E20), totalRewardStr: '1E20', 
+                   contribPrct: 70, rewardModelAddr: rewardModelContrs[0].address});
+    projects.push({name: 'p2', totalReward: toBN(2E20), totalRewardStr: '2E20', 
+                   contribPrct: 80, rewardModelAddr: rewardModelContrs[0].address});
     let result = null, ev = null;
-    for(const p in ["p1", "p2"]){
-      result = await prjMgrContr.createProject(p, {from: admin});
-      
+    for(const prj of projects){
+      result = await prjMgrContr.createProject(
+          prj.name, prj.totalReward, prj.contribPrct, prj.rewardModelAddr, {from: admin});
       expectEvent(result, 'ProjectCreated');
-      
       ev = result.logs[0].args;
-      projects.push({'id': ev.id.toNumber(), 'address': ev.addr});
+      prj.id = ev.id.toNumber();
+      prj.address = ev.addr;
+      //projects.push({'id': ev.id.toNumber(), 'address': ev.addr});
     }
     console.log("Created Projects");
-    console.table(projects, ['id', 'address']);
+    console.table(projects, ['id', 'address', 'name', 'totalRewardStr', 'contribPrct']);
     
-    // Assign voters
-    let prjContr = 0, vtrs = [];
+    // Assign voters - all 3 voters for all projects
+    let prjContr = 0;
     for(const prj of projects){
+      await prjMgrContr.assignProjectVoters(prj.id, voters, {from: admin});
       prjContr = await ProjectContract.at(prj.address);
-      await prjContr.assignVoters(voters, {from: admin});
-      vtrs = await prjContr.getVoters();
 
-      assert.sameMembers(vtrs, voters, `Voters for the project ${prj.id} has NOT been set correctly.`);
-      prj.voters = vtrs.toString();
+      assert.sameMembers(await prjContr.getVoters(), voters, `Voters for the project ${prj.id} has NOT been set correctly.`);
+      prj.voters = voters.toString();
     }
 
     console.log("Voters Assigned");
@@ -99,10 +112,10 @@ contract("Integrated test for normal scenario", async accounts => {
     contribs.push({project: projects[0].id, contributor: contributors[0], title: "C1"});
     contribs.push({project: projects[0].id, contributor: contributors[1], title: "C2"});
     
-    for(const cntr of contribs){
+    for(const cntrb of contribs){
       expectEvent(
-        await contribsContr.addOrUpdateContribution(toBN(cntr.project), cntr.contributor, cntr.title, {from: admin}),
-        'ContributionAdded', {0: toBN(cntr.project), 1: cntr.contributor});
+        await contribsContr.addOrUpdateContribution(toBN(cntrb.project), cntrb.contributor, cntrb.title, {from: admin}),
+        'ContributionAdded', {0: toBN(cntrb.project), 1: cntrb.contributor});
     }
     console.log("Contributions Registered");
     console.table(contribs);

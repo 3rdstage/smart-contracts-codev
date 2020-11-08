@@ -13,11 +13,11 @@ contract("ProjectManager Uint Tests", async accounts => {
 
   // avoid too many accounts
   if(accounts.length > 8) accounts = accounts.slice(0, 8);
-  
-  
-  const rewardModels = [];
+
   const EventNames = {
   };
+
+  const rewardModels = [];
 
   async function createFixtures(){
     const chance = new Chance();
@@ -25,6 +25,12 @@ contract("ProjectManager Uint Tests", async accounts => {
     const prjMgr = await ProjectManager.new({from: admin});
 
     return [chance, admin, prjMgr];
+  }
+  
+  async function registerRewardModels(prjMgr, models, admin){
+    for(const mdl of models){
+      await prjMgr.registerRewardModel(mdl.address, {from: admin});
+    }   
   }
   
   before(async() => {
@@ -57,20 +63,27 @@ contract("ProjectManager Uint Tests", async accounts => {
   
   
   it("Can count the number of created projects", async() => {
+
     const [chance, admin, prjMgr] = await createFixtures();
+    await registerRewardModels(prjMgr, rewardModels, admin);
     
     const n = chance.natural({min: 3, max: 10});
+    let name = null, totalRwd = 0, cntrbPrct = 0, rwdMdlAddr = 0;
     for(let i = 0; i < n; i++){
-      await prjMgr.createProject(chance.word({length: chance.natural({min: 5, max: 15})}), {from: admin});
+      name = chance.word({length: 10});
+      totalRwd = toBN(1E20).muln(chance.natural({min: 1, max: 5})); // total reward
+      cntrbPrct = chance.natural({min: 1, max: 99});  // contributors reward pecent           
+      rwdMdlAddr = chance.pickone(rewardModels).address; // reward model address
+      
+      await prjMgr.createProject(name, totalRwd, cntrbPrct, rwdMdlAddr, {from: admin});
     }
   
     const cnt = await prjMgr.getNumberOfProjects();
-    
-    assert.isTrue(cnt.eqn(n), "Number of created projects are different from the number that project manager contract counts");   
+    assert.equal(cnt.toNumber(), n, "Number of created projects are different from the number that project manager contract counts");   
     
   });
   
-  it.only("Can register reward models", async() => {
+  it("Can register reward models", async() => {
     const [chance, admin, prjMgr] = await createFixtures();
     const addrs = [], names = [];
     
@@ -79,7 +92,6 @@ contract("ProjectManager Uint Tests", async accounts => {
       await prjMgr.registerRewardModel(model.address, {from: admin});
       names.push(await model.getName());
     }
-    console.log("Registering model names: " + names.toString());
     
     const cnt = await prjMgr.getNumberOfRewardModels();
     assert.isTrue(cnt.eqn(rewardModels.length));    
@@ -88,12 +100,10 @@ contract("ProjectManager Uint Tests", async accounts => {
     const addrs2 = [], names2 = [];
     for(let i = 0; i < cnt; i++){
       mdl2 = await prjMgr.getRewardModel(i)
-      console.log(mdl2);
-      addrs2.push(mdl2.addr);
-      names2.push(mdl2.name);
+      addrs2.push(mdl2[0]); // address
+      names2.push(mdl2[1]); // name
     }
   
-    console.log("Registered model names: " + names2.toString());
     assert.sameMembers(names, names2, "Wrong reward model is registered.");
     assert.sameMembers(addrs, addrs2, "Wrong reward model is registered."); 
     
