@@ -2,12 +2,13 @@
 pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
-import "./ProjectManagerL.sol";
-import "./ContributionsL.sol";
 import "../../node_modules/@openzeppelin/contracts/GSN/Context.sol";
 import "../../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
 import "../../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
 import "../../node_modules/@openzeppelin/contracts/utils/Counters.sol";
+import "./ProjectManager.sol";
+import "./Project.sol";
+import "./Contributions.sol";
 
 contract VotesL is Context, AccessControl{
     using EnumerableSet for EnumerableSet.AddressSet;

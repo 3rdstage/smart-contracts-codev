@@ -65,7 +65,7 @@ contract("ProjectL Uint Tests", async accounts => {
     const voters = chance.pickset(accounts, 3);
     console.log(voters);
     
-    await project.setVoters(voters);
+    await project.assignVoters(voters);
     const voters2 = await project.getVoters(); 
     console.log(voters2);
    
