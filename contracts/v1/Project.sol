@@ -40,15 +40,15 @@ contract Project is Context ,AccessControl {
     }
 
     //storage variables
-    Voter[] private votersArr;
+    Voter[] public votersArr; //to private
     //TargetCompany[] private companyArr;
     //TargetCompany[] private companyArr;
 
-    EnumerableSet.AddressSet private voterAddressSet;
-    EnumerableSet.AddressSet private companyAddressSet;
+    EnumerableSet.AddressSet private voterAddressSet; //to private
+    EnumerableSet.AddressSet private companyAddressSet; //to private
 
-    mapping(address => Voter) voters;
-    mapping(address => TargetCompany) targetCompanys;
+    mapping(address => Voter) public voters;
+    mapping(address => TargetCompany) public targetCompanys;
 
     address private projectOwner;
     uint256 private projectEndTime;
@@ -60,7 +60,9 @@ contract Project is Context ,AccessControl {
     //Events
     event VoterAdded();
     event CompanyAdded();
-
+    event Gen(uint256 _number);
+    uint256 public testi;
+    address public testad;
     constructor(
         address _projectOwner,
         uint256 _endTime,
@@ -78,7 +80,10 @@ contract Project is Context ,AccessControl {
     function setRewardPolicy(address _rewardPolicy) external{
         rewardPolicy = IRewardPolicy(_rewardPolicy);
     }
-
+    
+    function getAddressSetLength() external returns(uint256 , uint256 ){
+        return (voterAddressSet.length(), companyAddressSet.length());
+    }
     function addVoter(address _voterAccount) external {
         require(hasRole(ADMIN_ROLE, _msgSender()), "addVoter() must have admin role to create.");
 
@@ -105,9 +110,9 @@ contract Project is Context ,AccessControl {
     //msg.sender로 구현하는 것이 맞다.(?) id를 관리한다.
     function voting(uint256 _voteAmount, address _voteeAddress) external {
         require(voterAddressSet.contains(_msgSender()), "You are not in voter list.");
-        require(endProject == true, "is not ended.");
+        require(endProject == false, "is ended.");
         require(companyAddressSet.contains(_voteeAddress), "The company is not in the list.");
-        require(voters[_msgSender()].voteeAccount == targetCompanys[_voteeAddress].companyAddress, "You voted aleady. If you want to vote another company, first unvoting that.");
+        //require(voters[_msgSender()].voteeAccount == targetCompanys[_voteeAddress].companyAddress, "You voted aleady. If you want to vote another company, first unvoting that.");
  
         TargetCompany storage company = targetCompanys[_voteeAddress];
         Voter storage voter = voters[_msgSender()];
@@ -125,7 +130,22 @@ contract Project is Context ,AccessControl {
         require( companyAddressSet.length() != 0, "There is no TargetCompany.");
         require( voterAddressSet.length() != 0, "There is no Voter.");
         require( endProject == false, "This Project is ended.");
-
+        
+        uint256 totalAmount = 0;
+        //bool isEnd = 0;
+        
+        for( uint256 i = 0; i <companyAddressSet.length(); i++){
+            //testad = companyAddressSet.at(i);
+            totalAmount += targetCompanys[companyAddressSet.at(i)].votedAmount; 
+        }
+        // for( uint256 j = 0; i <voterAddressSet.length(); i++){
+        //     //testad = companyAddressSet.at(i);
+        //     if(voters[voterAddressSet.at(i)].voted == false){
+        //         isEnd = false;
+        //     }
+        // }
+        //require( isEnd != 0, "totalAmount never be the zero.");
+        require( totalAmount != 0, "totalAmount never be the zero.");
         //End conditions
         endProject = true;
         //voterIds
@@ -134,13 +154,13 @@ contract Project is Context ,AccessControl {
         //Uint[2][] public T = new uint[2][](0);
         //[{0x...,100},{0x..., 1000}, {0x..., 2000}]
 
-        _generateWinner();
+        //_generateWinner();
         //_rewardToVoter();
         // _rewardToCompany();
 
     }
 
-    function _generateWinner() internal {
+    function _generateWinner() public {
         require(endProject == true, "Project is not ended.");
         require(hasRole(ADMIN_ROLE, _msgSender()), "rewardToVoter() must have admin role to create.");
 
@@ -148,7 +168,12 @@ contract Project is Context ,AccessControl {
         //= new TargetCompany[](companyAddressSet.length());
         //will move to util
         TargetCompany[] memory companyArr = new TargetCompany[](companyAddressSet.length());
-        for( uint256 i = 1; i <= companyAddressSet.length(); i++){
+        
+        //TargetCompany[] memory companyArr = new TargetCompany[](companyAddressSet.length());
+        testi = companyAddressSet.length();
+        //emit Gen(companyAddressSet.length());
+        for( uint256 i = 0; i <companyAddressSet.length(); i++){
+            //testad = companyAddressSet.at(i);
             companyArr[i] = targetCompanys[companyAddressSet.at(i)]; 
         }
 
