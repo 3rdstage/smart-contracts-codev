@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >0.6.6 <0.7.0;
 pragma experimental ABIEncoderV2;
-import "../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
-import "../node_modules/@openzeppelin/contracts/utils/Address.sol";
-import "../node_modules/@openzeppelin/contracts/GSN/Context.sol";
+import "../../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
+import "../../node_modules/@openzeppelin/contracts/utils/Address.sol";
+import "../../node_modules/@openzeppelin/contracts/GSN/Context.sol";
 import "./ERC20PresetMinterPauser.sol";
-import "../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
-import "../node_modules/@openzeppelin/contracts/utils/EnumerableMap.sol";
+import "../../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
+import "../../node_modules/@openzeppelin/contracts/utils/EnumerableMap.sol";
 import "./AbstractRewardPolicy.sol";
-import "../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
+import "../../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
+import "./Project.sol";
 
-contract RewardPolicyV1 is AbstractRewardPolicy {
+contract RewardPolicy is AbstractRewardPolicy {
 
     //libraries
     using SafeMath for uint256;
@@ -27,14 +28,10 @@ contract RewardPolicyV1 is AbstractRewardPolicy {
     uint256 private constant rewardRatioToTop = 3;
     uint256 private constant rewardRatioToOthers = 2;
 
-
-    struct Voter {
-        address voterAccount ;
-        uint256 voteAmount; 
-        bool voted;  
-        address voteeAccount;
+    struct RewardResultToCompany {
+        address companyAddress;
+        uint256 reward;
     }
-
 
     struct RewardResultToVoter {
         address companyAddress;
@@ -55,7 +52,7 @@ contract RewardPolicyV1 is AbstractRewardPolicy {
 
     }
 
-    function rewardToCompany(TargetCompany[] calldata _companysArray) override external {
+    function rewardToCompany(Project.TargetCompany[] memory _companysArray) override public {
             uint256 totalAmount = 0;
             uint256[] memory myAmount = new uint256[](_companysArray.length);
             //rrtcCom = RewardResultToCompany

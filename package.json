@@ -8,8 +8,14 @@
   ],
   "version": "0.3.0",
   "contributors": [
-    {"name": "Sangmoon Oh", "email": "sangmoon.oh@sk.com"},
-    {"name": "Yang", "email": ""}  
+    {
+      "name": "Sangmoon Oh",
+      "email": "sangmoon.oh@sk.com"
+    },
+    {
+      "name": "Yang",
+      "email": ""
+    }
   ],
   "dependencies": {
     "@openzeppelin/contracts": "^3.2.0",
