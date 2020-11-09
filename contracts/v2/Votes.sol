@@ -10,14 +10,14 @@ import "./ProjectManager.sol";
 import "./Project.sol";
 import "./Contributions.sol";
 
+struct Vote{
+    address voter;  // never be ZERO address after instantiated
+    address votee;  // target of voting
+    uint256 amount;
+}
+
 contract VotesL is Context, AccessControl{
     using EnumerableSet for EnumerableSet.AddressSet;
-    
-    struct Vote{
-        address voter;  // never be ZERO address after instantiated
-        address votee;  // target of voting
-        uint256 amount;
-    }
 
      // votes by project and voter
     mapping(uint256 => mapping(address => Vote)) private votes;    // (project, voter) => (votee, amount)

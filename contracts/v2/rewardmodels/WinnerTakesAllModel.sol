@@ -15,12 +15,12 @@ contract WinnerTakesAllModelL is IRewardModelL{
     }
     
     
-    function calcContributorRewards(uint256 _totalAmount, VotesL.Vote[] calldata _votes) external override{
+    function calcContributorRewards(uint256 _totalAmount, Vote[] calldata _votes) external override{
         
         
     }
 
-    function calcVoterRewards(uint256 _totalAmount, VotesL.Vote[] calldata _votes) external override{
+    function calcVoterRewards(uint256 _totalAmount, Vote[] calldata _votes) external override{
         
     }
     

@@ -6,14 +6,14 @@ import "../../node_modules/@openzeppelin/contracts/access/Ownable.sol";
 import "../../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
 import "./IRewardModel.sol";
 
+struct RewardScale{
+    uint256 total;
+    uint8 contributorsPercent;  // (0, 100)
+}
+
 contract ProjectL is Ownable{
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    struct RewardScale{
-        uint256 total;
-        uint8 contributorsPercent;  // (0, 100)
-    }
-    
     uint256 private id;
 
     string private name;

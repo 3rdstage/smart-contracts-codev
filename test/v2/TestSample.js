@@ -67,7 +67,7 @@ contract("Only2VoteesAllowedModel contract uint tests", async accounts => {
     
   });
   
-  it.only("Can accept strut array parameter", async() => {
+  it("Can accept strut array parameter", async() => {
     const [chance, admin, sampleContr] = await createFixtures();
 
     const amt = 30000000000;
@@ -82,7 +82,7 @@ contract("Only2VoteesAllowedModel contract uint tests", async accounts => {
     expectEvent(rcpt, 'VoteIdentified', {0: voters[1], 1: votees[1]});
   });
   
-  it.only("Can deliver struct array param to another contract.", async() => {
+  it("Can deliver struct array param to another contract.", async() => {
     const [chance, admin, sampleContr] = await createFixtures();
 
     const ttl = toBN(2E18);

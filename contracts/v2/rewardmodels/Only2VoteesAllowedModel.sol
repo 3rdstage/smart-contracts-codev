@@ -17,10 +17,10 @@ contract Only2VoteesAllowedModelL is IRewardModelL{
     }
     
     
-    function calcContributorRewards(uint256 _totalAmount, VotesL.Vote[] calldata _votes) external override{
+    function calcContributorRewards(uint256 _totalAmount, Vote[] calldata _votes) external override{
         
         uint256 l = _votes.length;
-        VotesL.Vote memory vt;
+        Vote memory vt;
         for(uint256 i = 0; i < l; i++){
             vt = _votes[i];
             emit VoteIdentified(vt.voter, vt.votee, vt.amount);
@@ -29,22 +29,10 @@ contract Only2VoteesAllowedModelL is IRewardModelL{
         
     }
 
-    function calcVoterRewards(uint256 _totalAmount, VotesL.Vote[] calldata _votes) external override{
+    function calcVoterRewards(uint256 _totalAmount, Vote[] calldata _votes) external override{
         
     }
 
-    function testStructArrayParams(VotesL.Vote[] calldata _votes) external{
-        
-        uint256 l = _votes.length;
-        VotesL.Vote memory vt;
-        for(uint256 i = 0; i < l; i++){
-            vt = _votes[i];
-            emit VoteIdentified(vt.voter, vt.votee, vt.amount);
-            
-        }
-        
-        
-    }
 
     
 }

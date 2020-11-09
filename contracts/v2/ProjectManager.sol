@@ -43,19 +43,6 @@ contract ProjectManagerL is Context, AccessControl{
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-//    function createProject(string memory _name) public onlyAdmin{
-//        projectCnter.increment();
-//        uint256 id = projectCnter.current();
-//        // new project is NEVER expected to be included in the `projects` already
-//        assert(!projects.contains(id));
-//        
-//        ProjectL prj = new ProjectL(id, _name);
-//        address addr = address(prj);
-//        projects.set(id, addr);
-//        
-//        emit ProjectCreated(id, addr);
-//    }
-    
     function createProject(string memory _name, uint256 _totalReward, uint8 _contribPerct, address _rewardModelAddr) public onlyAdmin{
         require(rewardModelAddrs.contains(_rewardModelAddr), "ProjectManager: The specified reward model is NOT registered yet. Register a reward model before assigning it to a project.");
 
@@ -141,7 +128,7 @@ contract ProjectManagerL is Context, AccessControl{
     function distrubteRewards(uint256 _prjId) public onlyAdmin{
         ProjectL prj = _findProject(_prjId);
         IRewardModelL model = IRewardModelL(prj.getRewardModelAddress());
-        VotesL.Vote[] memory vts = new VotesL.Vote[](10);
+        Vote[] memory vts = new Vote[](10);
 
         model.calcContributorRewards(100000000, vts);
         

@@ -8,7 +8,4 @@ import "./IRewardModel.sol";
 
 abstract contract AbstractRewardModelL is IRewardModelL, Context, AccessControl{
     
-
-    
-    
 }

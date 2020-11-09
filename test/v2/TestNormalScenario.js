@@ -38,7 +38,7 @@ contract("Integrated test for normal scenario", async accounts => {
     }
 
     console.debug(`The number of accounts : ${accounts.length}`);
-    console.accts(table);
+    console.table(accts);
   });
   
   

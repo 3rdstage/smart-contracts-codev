@@ -7,14 +7,14 @@ import "../../node_modules/@openzeppelin/contracts/utils/EnumerableMap.sol";
 import "../../node_modules/@openzeppelin/contracts/utils/Counters.sol";
 import "./ProjectManager.sol";
 
-contract ContributionsL is Context, AccessControl{
+struct Contrib{
+    address owner;  // should never be ZERO address
+    string title;
+    string docUrl;
+    bytes32 docHash;
+}
 
-    struct Contrib{
-        address owner;  // should never be ZERO address
-        string title;
-        string docUrl;
-        bytes32 docHash;
-    }
+contract ContributionsL is Context, AccessControl{
 
     ProjectManagerL private projectManager;
     

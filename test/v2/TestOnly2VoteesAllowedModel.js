@@ -31,8 +31,12 @@ contract("Only2VoteesAllowedModel contract uint tests", async accounts => {
   before(async() => {
     assert.isAtLeast(accounts.length, 8, "There should at least 8 accounts to run this test.");
 
-    const votees = [accounts[2], accounts[3], accounts[4]];
-    const voters = [accounts[5], accounts[6], accounts[7]];
+    votees.push(accounts[2]);
+    votees.push(accounts[3]);
+    votees.push(accounts[4]);
+    voters.push(accounts[5]);
+    voters.push(accounts[6]);
+    voters.push(accounts[7]);
 
     const accts = [];
     let balance = 0;
@@ -51,6 +55,7 @@ contract("Only2VoteesAllowedModel contract uint tests", async accounts => {
     
     const vts = [];
     vts.push({voter: voters[0], votee: votees[0], amount: toBN(3E18)});
+    vts.push({voter: voters[1], votee: votees[1], amount: toBN(4E18)});
     
     await rewardModel.calcContributorRewards(toBN(3E20), vts);  
     
