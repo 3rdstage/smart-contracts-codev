@@ -8,8 +8,8 @@ interface IRewardModelL{
     
     function getName() external view returns (string memory);
 
-    function calcContributorRewards(uint256 totalAmount, VotesL.Vote[] calldata votes) external view;
+    function calcContributorRewards(uint256 totalAmount, VotesL.Vote[] calldata _votes) external;
     
-    function calcVoterRewards(uint256 totalAmount, VotesL.Vote[] calldata votes) external view;
+    function calcVoterRewards(uint256 totalAmount, VotesL.Vote[] calldata _votes) external;
 
 }

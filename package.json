@@ -1,12 +1,16 @@
 {
   "name": "codev-smart-contracts",
-  "description": "Smart Contracts for Collaborative Development Evaluation",
+  "description": "Smart Contracts for Collaborative Development",
   "keywords": [
     "Smart Contract",
     "Ethereum",
     "Solidity"
   ],
-  "version": "0.1.0",
+  "version": "0.3.0",
+  "contributors": [
+    {"name": "Sangmoon Oh", "email": "sangmoon.oh@sk.com"},
+    {"name": "Yang", "email": ""}  
+  ],
   "dependencies": {
     "@openzeppelin/contracts": "^3.2.0",
     "@truffle/hdwallet-provider": "^1.1.1",

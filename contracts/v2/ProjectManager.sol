@@ -133,16 +133,17 @@ contract ProjectManagerL is Context, AccessControl{
         
         prj.assignVoters(_voters);
     }
+    
+    function simulateRewards(uint256 _prjId) external view{
+        
+    }
 
     function distrubteRewards(uint256 _prjId) public onlyAdmin{
-        
-        // @TODO
-        
+        ProjectL prj = _findProject(_prjId);
+        IRewardModelL model = IRewardModelL(prj.getRewardModelAddress());
         VotesL.Vote[] memory vts = new VotesL.Vote[](10);
-        
-        //IRewardModelL model = new I();
-        
-        //model.calcContributorRewards(100000000, vts);
+
+        model.calcContributorRewards(100000000, vts);
         
     }
 

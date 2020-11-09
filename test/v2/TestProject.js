@@ -7,7 +7,7 @@ const Chance = require('chance');
 const toBN = web3.utils.toBN;
 const { constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
-contract("Project Uint Tests", async accounts => {
+contract("Project contract uint tests", async accounts => {
   
   'use strict';
 
@@ -31,12 +31,12 @@ contract("Project Uint Tests", async accounts => {
   }
   
   before(async() => {
-    const table = [];
+    const accts = [];
     let balance = 0;
 
     for(const acct of accounts){
         await web3.eth.personal.unlockAccount(acct);
-        await table.push([acct, await web3.eth.getBalance(acct)]);
+        await accts.push([acct, await web3.eth.getBalance(acct)]);
     }
 
     rewardModels.push(await Only2VoteesAllowedModel.new({from: accounts[0]}));
@@ -44,7 +44,7 @@ contract("Project Uint Tests", async accounts => {
     rewardModels.push(await WinnerTakesAllModel.new({from: accounts[0]}));
 
     console.debug(`The number of accounts : ${accounts.length}`);
-    console.table(table);
+    console.table(accts);
   });
   
   

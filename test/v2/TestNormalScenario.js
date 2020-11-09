@@ -28,18 +28,17 @@ contract("Integrated test for normal scenario", async accounts => {
   }
   
   before(async() => {
-    assert.isAtLeast(accounts.length, 8, "There should at least 8 accounts to run this test.");
     
-    const table = [];
+    const accts = [];
     let balance = 0;
 
     for(const acct of accounts){
         await web3.eth.personal.unlockAccount(acct);
-        await table.push([acct, await web3.eth.getBalance(acct)]);
+        await accts.push([acct, await web3.eth.getBalance(acct)]);
     }
 
     console.debug(`The number of accounts : ${accounts.length}`);
-    console.table(table);
+    console.accts(table);
   });
   
   
@@ -132,9 +131,6 @@ contract("Integrated test for normal scenario", async accounts => {
     }
     console.log("First Project Voted");
     console.table(votes);
-
-
-    
   });
 });
 
