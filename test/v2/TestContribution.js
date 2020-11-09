@@ -1,12 +1,10 @@
-const IRewardModel = artifacts.require("IRewardModelL");
-const Only2VoteesAllowedModel = artifacts.require("Only2VoteesAllowedModelL");
-const Top2RewardedModel = artifacts.require("Top2RewardedModelL");
-const WinnerTakesAllModel = artifacts.require("WinnerTakesAllModelL");
+const ProjectManagerContr = artifacts.require("ProjectManagerL");
+const ContributiosContr = artifacts.require("ContributionsL");
 const Chance = require('chance');
 const toBN = web3.utils.toBN;
 const { constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
-contract("Only2VoteesAllowedModel contract uint tests", async accounts => {
+contract("Contribution contract uint tests", async accounts => {
   
   'use strict';
 
@@ -23,9 +21,10 @@ contract("Only2VoteesAllowedModel contract uint tests", async accounts => {
  
     const chance = new Chance();
     const admin = chance.pickone(accounts);
-    const rewardModel = await Only2VoteesAllowedModel.new({from: admin});
+    const prjMgrContr = await ProjectManagerContr.new({from: admin});
+    const contribsContr = await ContributionsContr.new(prjMgrContr.address, {from: admin});
 
-    return [chance, admin, rewardModel];
+    return [chance, admin, prjMgrContr, contribsContr];
   }
   
   before(async() => {
@@ -50,16 +49,6 @@ contract("Only2VoteesAllowedModel contract uint tests", async accounts => {
     console.table(accts);
   });
   
-  it("Can accept struct array parameter.", async() => {
-    const [chance, admin, rewardModel] = await createFixtures();
-    
-    const vts = [];
-    vts.push({voter: voters[0], votee: votees[0], amount: toBN(3E18)});
-    vts.push({voter: voters[1], votee: votees[1], amount: toBN(4E18)});
-    
-    await rewardModel.calcContributorRewards(toBN(3E20), vts);  
-    
-    
-  });
+  it("...");
 
 });

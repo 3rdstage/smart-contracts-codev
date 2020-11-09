@@ -15,12 +15,13 @@ contract Top2RewardedModelL is IRewardModelL{
     }
     
     
-    function calcContributorRewards(uint256 _totalAmount, Vote[] calldata _votes) external override{
-        
-        
+    function calcContributorRewards(uint256 _totalAmount, Vote[] calldata _votes) 
+        external view override returns (Reward[] memory voterRewards, Reward[] memory voteeRewards){
+
     }
 
-    function calcVoterRewards(uint256 _totalAmount, Vote[] calldata _votes) external override{
+    function calcVoterRewards(uint256 _totalAmount, Vote[] calldata _votes) 
+        external view override returns (Reward[] memory voterRewards, Reward[] memory voteeRewards){
         
     }
     

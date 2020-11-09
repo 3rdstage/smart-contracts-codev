@@ -15,21 +15,17 @@ contract Only2VoteesAllowedModelL is IRewardModelL{
     function getName() external view override returns (string memory){
         return NAME;
     }
-    
-    
-    function calcContributorRewards(uint256 _totalAmount, Vote[] calldata _votes) external override{
-        
-        uint256 l = _votes.length;
-        Vote memory vt;
-        for(uint256 i = 0; i < l; i++){
-            vt = _votes[i];
-            emit VoteIdentified(vt.voter, vt.votee, vt.amount);
+
+    function calcContributorRewards(uint256 _totalAmount, Vote[] calldata _votes) 
+        external view override returns (Reward[] memory voterRewards, Reward[] memory voteeRewards){
             
-        }
-        
+        uint256 l = _votes.length;
+        require(l > 0, "Only2VoteesAllowedModel: The provided vote data is empty.");
+
     }
 
-    function calcVoterRewards(uint256 _totalAmount, Vote[] calldata _votes) external override{
+    function calcVoterRewards(uint256 _totalAmount, Vote[] calldata _votes) 
+        external view override returns (Reward[] memory voterRewards, Reward[] memory voteeRewards){
         
     }
 
