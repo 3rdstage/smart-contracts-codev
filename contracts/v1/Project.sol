@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity >0.6.6 <0.7.0;
 pragma experimental ABIEncoderV2;
-import "../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
-import "../node_modules/@openzeppelin/contracts/utils/Address.sol";
-import "../node_modules/@openzeppelin/contracts/GSN/Context.sol";
+import "../../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
+import "../../node_modules/@openzeppelin/contracts/utils/Address.sol";
+import "../../node_modules/@openzeppelin/contracts/GSN/Context.sol";
 import "./ERC20PresetMinterPauser.sol";
-import "../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
-import "../node_modules/@openzeppelin/contracts/utils/EnumerableMap.sol";
-import "../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
+import "../../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
+import "../../node_modules/@openzeppelin/contracts/utils/EnumerableMap.sol";
+import "../../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
 import "./AbstractRewardPolicy.sol";
 import "./IRewardPolicy.sol";
 
@@ -184,7 +184,7 @@ contract Project is Context ,AccessControl {
         //_rewardToVoter(companyArr);
         _rewardToCompany(companyArr);
     }
-    // function _rewardToVoter(TargetCompany[] memory _companyArray) internal {
+    // function _rewardToVoter(Voter[] memory _companyArray) internal {
     //     require(endProject == true, "Project is not ended.");
     //     require(hasRole(ADMIN_ROLE, _msgSender()), "rewardToVoter() must have admin role to create.");
         
@@ -194,11 +194,7 @@ contract Project is Context ,AccessControl {
     function _rewardToCompany(TargetCompany[] memory _companyArray) internal {
         require(endProject == true, "Project is not ended.");
         require(hasRole(ADMIN_ROLE, _msgSender()), "rewardToVoter() must have admin role to create.");
-        //
-        // uint256[] memory t = new uint256[](3);
-        // Voter[] memory ty = new Voter[](3);
-        // address[] memory tyt = new address[](3);
-        //??? 시작 확인이 좀 필요하다.
-        //rewardPolicy.rewardToCompany(_companyArray);
+  
+        rewardPolicy.rewardToCompany(_companyArray);
     }
 }
