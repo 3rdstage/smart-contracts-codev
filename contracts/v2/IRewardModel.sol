@@ -2,19 +2,15 @@
 pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
-import "./Votes.sol";
-
-struct Reward{
-    address to;
-    uint256 amount;
-}
+import "./Commons.sol";
 
 interface IRewardModelL{
 
     function getName() external view returns (string memory);
 
-    function calcContributorRewards(uint256 totalAmount, Vote[] calldata _votes) external view returns (Reward[] memory voterRewards, Reward[] memory voteeRewards);
+    // @TODO Can return `calldata` struct array ?
+    function calcContributorRewards(RewardPot calldata _rewardPot, Vote[] calldata _votes, Score[] calldata _scores) external view returns (Reward[] memory voterRewards, Reward[] memory voteeRewards);
     
-    function calcVoterRewards(uint256 totalAmount, Vote[] calldata _votes) external view returns (Reward[] memory voterRewards, Reward[] memory voteeRewards);
+    function calcVoterRewards(uint256 _totalAmt, Vote[] calldata _votes) external view returns (Reward[] memory voterRewards, Reward[] memory voteeRewards);
 
 }

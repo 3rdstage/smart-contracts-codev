@@ -4,15 +4,12 @@ const Chance = require('chance');
 const toBN = web3.utils.toBN;
 const { constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
-contract("Only2VoteesAllowedModel contract uint tests", async accounts => {
+contract("Sample contract uint tests", async accounts => {
   
   'use strict';
 
   // avoid too many accounts
-  if(accounts.length > 8) accounts = accounts.slice(0, 8);
-
-  const EventNames = {
-  };
+  if(accounts.length > 10) accounts = accounts.slice(0, 10);
 
   const votees = []; // fill in the `before` function
   const voters = []; // fill in the `before` function

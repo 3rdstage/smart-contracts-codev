@@ -1,6 +1,6 @@
 const ProjectManager = artifacts.require("ProjectManagerL");
 const IRewardModel = artifacts.require("IRewardModelL");
-const Only2VoteesAllowedModel = artifacts.require("Only2VoteesAllowedModelL");
+const ProportionalRewardModel = artifacts.require("ProportionalRewardModelL");
 const Top2RewardedModel = artifacts.require("Top2RewardedModelL");
 const WinnerTakesAllModel = artifacts.require("WinnerTakesAllModelL");
 const Chance = require('chance');
@@ -12,10 +12,7 @@ contract("ProjectManager contract uint tests", async accounts => {
   'use strict';
 
   // avoid too many accounts
-  if(accounts.length > 8) accounts = accounts.slice(0, 8);
-
-  const EventNames = {
-  };
+  if(accounts.length > 10) accounts = accounts.slice(0, 10);
 
   const rewardModels = [];
 
@@ -42,7 +39,7 @@ contract("ProjectManager contract uint tests", async accounts => {
         await accts.push([acct, await web3.eth.getBalance(acct)]);
     }
 
-    rewardModels.push(await Only2VoteesAllowedModel.new({from: accounts[0]}));
+    rewardModels.push(await ProportionalRewardModel.new({from: accounts[0]}));
     rewardModels.push(await Top2RewardedModel.new({from: accounts[0]}));
     rewardModels.push(await WinnerTakesAllModel.new({from: accounts[0]}));
 

@@ -7,15 +7,15 @@ import "../IRewardModel.sol";
 
 contract Top2RewardedModelL is IRewardModelL{
     
-    string constant NAME = "Top 2 Rewarded Model";
+    string private constant name = "Top 2 Rewarded Model";
     
     
     function getName() external view override returns (string memory){
-        return NAME;
+        return name;
     }
     
     
-    function calcContributorRewards(uint256 _totalAmount, Vote[] calldata _votes) 
+    function calcContributorRewards(RewardPot calldata _rewardPot, Vote[] calldata _votes, Score[] calldata _scores) 
         external view override returns (Reward[] memory voterRewards, Reward[] memory voteeRewards){
 
     }

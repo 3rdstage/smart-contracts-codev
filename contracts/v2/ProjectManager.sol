@@ -7,6 +7,7 @@ import "../../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
 import "../../node_modules/@openzeppelin/contracts/utils/EnumerableMap.sol";
 import "../../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
 import "../../node_modules/@openzeppelin/contracts/utils/Counters.sol";
+import "./Commons.sol";
 import "./Project.sol";
 import "./Votes.sol";
 import "./IRewardModel.sol";
@@ -31,6 +32,8 @@ contract ProjectManagerL is Context, AccessControl{
     mapping(address => string) private rewardModels; // Map(key: address, value: name)
     
     EnumerableSet.AddressSet private rewardModelAddrs; // keys for rewardModels;
+    
+    VotesL private votesContract; // votes contract
 
     event ProjectCreated(uint256 indexed id, address addr, uint256 totalReward, uint8 contirbPercent, address rewardModelAddr);
 
@@ -42,19 +45,25 @@ contract ProjectManagerL is Context, AccessControl{
     constructor() public{
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
+    
+    function setVotesContact(address _addr) public onlyAdmin{
+        require(_addr != address(0), "ProjectManager: Votes contract can't be ZERO address");
+        
+        votesContract = VotesL(_addr);
+    }
 
-    function createProject(string memory _name, uint256 _totalReward, uint8 _contribPerct, address _rewardModelAddr) public onlyAdmin{
+    function createProject(string memory _name, uint256 _totalReward, uint8 _contribsPerct, address _rewardModelAddr) public onlyAdmin{
         require(rewardModelAddrs.contains(_rewardModelAddr), "ProjectManager: The specified reward model is NOT registered yet. Register a reward model before assigning it to a project.");
 
         projectCnter.increment();
         uint256 id = projectCnter.current();
         assert(!projects.contains(id)); // not require but assert - The project ID is managed internally.
         
-        ProjectL prj = new ProjectL(id, _name, _totalReward, _contribPerct, _rewardModelAddr);
+        ProjectL prj = new ProjectL(id, _name, _totalReward, _contribsPerct, _rewardModelAddr);
         address addr = address(prj);
         projects.set(id, addr);
         
-        emit ProjectCreated(id, addr, _totalReward, _contribPerct, _rewardModelAddr);
+        emit ProjectCreated(id, addr, _totalReward, _contribsPerct, _rewardModelAddr);
     }
     
     
@@ -109,10 +118,10 @@ contract ProjectManagerL is Context, AccessControl{
         prj.setRewarded();
     }
     
-    function setProjectRewardScale(uint256 _prjId, uint256 _total, uint8 _contribPerct) external onlyAdmin{
+    function setProjectRewardPot(uint256 _prjId, uint256 _total, uint8 _contribsPerct) external onlyAdmin{
         ProjectL prj = _findProject(_prjId);
         
-        prj.setRewardScale(_total, _contribPerct);
+        prj.setRewardPot(_total, _contribsPerct);
     }
 
     function assignProjectVoters(uint256 _prjId, address[] calldata _voters) external onlyAdmin{
@@ -121,16 +130,22 @@ contract ProjectManagerL is Context, AccessControl{
         prj.assignVoters(_voters);
     }
     
-    function simulateRewards(uint256 _prjId) external view{
+    function simulateRewards(uint256 _prjId) external view returns(Reward[] memory voterRewards, Reward[] memory voteeRewards){
+        ProjectL prj = _findProject(_prjId);
         
+        IRewardModelL mdl = IRewardModelL(prj.getRewardModelAddress());
+        Vote[] memory vts = votesContract.getVotesByProject(_prjId);
+        Score[] memory scrs = votesContract.getScoresByProject(_prjId);
+        
+        require(vts.length > 0, "ProjectManager: There's no votes yet for the specified project.");
+        
+        (uint256 ttl, uint8 prct) = prj.getRewardPot();
+        RewardPot memory scl = RewardPot(ttl, prct);
+        return mdl.calcContributorRewards(scl, vts, scrs);
     }
 
     function distrubteRewards(uint256 _prjId) public onlyAdmin{
-        ProjectL prj = _findProject(_prjId);
-        IRewardModelL model = IRewardModelL(prj.getRewardModelAddress());
-        Vote[] memory vts = new Vote[](10);
 
-        model.calcContributorRewards(100000000, vts);
         
     }
 

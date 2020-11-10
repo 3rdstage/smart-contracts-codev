@@ -4,12 +4,9 @@ pragma solidity ^0.6.0;
 import "../../node_modules/@openzeppelin/contracts/GSN/Context.sol";
 import "../../node_modules/@openzeppelin/contracts/access/Ownable.sol";
 import "../../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
+import "./Commons.sol";
 import "./IRewardModel.sol";
 
-struct RewardScale{
-    uint256 total;
-    uint8 contributorsPercent;  // (0, 100)
-}
 
 contract ProjectL is Ownable{
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -18,7 +15,7 @@ contract ProjectL is Ownable{
 
     string private name;
 
-    RewardScale rewardScale;
+    RewardPot rewardPot;
     
     IRewardModelL private rewardModel;
 
@@ -26,15 +23,15 @@ contract ProjectL is Ownable{
 
     bool private rewarded = false;   // whether or not rewards are distributed to contributors and voters
     
-    event RewardScaleUpdated(uint256 indexed projectId, uint256 totalReward, uint8 contributorsPercent);
+    event RewardPotUpdated(uint256 indexed projectId, uint256 totalReward, uint8 contribsPercent);
     
     event RewardDistributed(uint256 indexed projectId);
     
-    constructor(uint256 _id, string memory _name, uint256 _totalReward, uint8 _contribPerct, address _rewardModelAddr) public{
+    constructor(uint256 _id, string memory _name, uint256 _totalReward, uint8 _contribsPerct, address _rewardModelAddr) public{
         id = _id;
         name = _name;
         
-        _setRewardScale(_totalReward, _contribPerct);
+        _setRewardPot(_totalReward, _contribsPerct);
         rewardModel = IRewardModelL(_rewardModelAddr); // @TODO
     }
   
@@ -46,22 +43,22 @@ contract ProjectL is Ownable{
         return name;
     }
 
-    function _setRewardScale(uint256 _total, uint8 _contribPerct) internal{
+    function _setRewardPot(uint256 _total, uint8 _contribsPerct) internal{
         require(_total > 0, "Project: Total reward should be positive.");
-        require(_contribPerct > 0 && _contribPerct < 100, "Project: The percentage for contributors should be between 0 and 100 exclusively.");
+        require(_contribsPerct > 0 && _contribsPerct < 100, "Project: The percentage for contributors should be between 0 and 100 exclusively.");
         require(!rewarded, "Project: Reward plan can't be changed after rewards are distributed. - This project has been rewareded already.");
         
-        rewardScale = RewardScale(_total, _contribPerct); 
+        rewardPot = RewardPot(_total, _contribsPerct); 
     }
     
-    function setRewardScale(uint256 _total, uint8 _contribPerct) external onlyOwner{
-        _setRewardScale(_total, _contribPerct);
+    function setRewardPot(uint256 _total, uint8 _contribsPerct) external onlyOwner{
+        _setRewardPot(_total, _contribsPerct);
 
-        emit RewardScaleUpdated(id, _total, _contribPerct);
+        emit RewardPotUpdated(id, _total, _contribsPerct);
     }
     
-    function getRewardScale() external view returns (uint256 total, uint8 conbribPerct){
-        return (rewardScale.total, rewardScale.contributorsPercent);
+    function getRewardPot() external view returns (uint256 total, uint8 contribsPerct){
+        return (rewardPot.total, rewardPot.contribsPercent);
     }
     
     function setRewardModel(address _addr) external onlyOwner{
@@ -84,6 +81,7 @@ contract ProjectL is Ownable{
         uint256 l = _voters.length;
         for(uint i = 0; i < l; i++) require(_voters[i] != address(0), "Project: Voter address can't be ZERO address.");
         
+        //@TODO What about `delete voters` - `delete` on struct in local
         l = voters.length();
         for(uint256 i = l; i > 0; i--) voters.remove(voters.at(i - 1));
 

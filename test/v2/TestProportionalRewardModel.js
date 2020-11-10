@@ -1,20 +1,17 @@
 const IRewardModel = artifacts.require("IRewardModelL");
-const Only2VoteesAllowedModel = artifacts.require("Only2VoteesAllowedModelL");
+const ProportionalRewardModel = artifacts.require("ProportionalRewardModelL");
 const Top2RewardedModel = artifacts.require("Top2RewardedModelL");
 const WinnerTakesAllModel = artifacts.require("WinnerTakesAllModelL");
 const Chance = require('chance');
 const toBN = web3.utils.toBN;
 const { constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
-contract("Only2VoteesAllowedModel contract uint tests", async accounts => {
+contract("ProportionalRewardModel contract uint tests", async accounts => {
   
   'use strict';
 
   // avoid too many accounts
-  if(accounts.length > 8) accounts = accounts.slice(0, 8);
-
-  const EventNames = {
-  };
+  if(accounts.length > 10) accounts = accounts.slice(0, 10);
 
   const votees = []; // fill in the `before` function
   const voters = []; // fill in the `before` function
@@ -23,7 +20,7 @@ contract("Only2VoteesAllowedModel contract uint tests", async accounts => {
  
     const chance = new Chance();
     const admin = chance.pickone(accounts);
-    const rewardModel = await Only2VoteesAllowedModel.new({from: admin});
+    const rewardModel = await ProportionalRewardModel.new({from: admin});
 
     return [chance, admin, rewardModel];
   }
@@ -57,7 +54,7 @@ contract("Only2VoteesAllowedModel contract uint tests", async accounts => {
     vts.push({voter: voters[0], votee: votees[0], amount: toBN(3E18)});
     vts.push({voter: voters[1], votee: votees[1], amount: toBN(4E18)});
     
-    await rewardModel.calcContributorRewards(toBN(3E20), vts);  
+    //await rewardModel.calcContributorRewards(toBN(3E20), vts);  
     
     
   });

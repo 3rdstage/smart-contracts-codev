@@ -1,5 +1,5 @@
 const ProjectManagerContr = artifacts.require("ProjectManagerL");
-const ContributiosContr = artifacts.require("ContributionsL");
+const ContributionsContr = artifacts.require("ContributionsL");
 const Chance = require('chance');
 const toBN = web3.utils.toBN;
 const { constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
@@ -9,10 +9,7 @@ contract("Contribution contract uint tests", async accounts => {
   'use strict';
 
   // avoid too many accounts
-  if(accounts.length > 8) accounts = accounts.slice(0, 8);
-
-  const EventNames = {
-  };
+  if(accounts.length > 10) accounts = accounts.slice(0, 10);
 
   const votees = []; // fill in the `before` function
   const voters = []; // fill in the `before` function
@@ -49,6 +46,20 @@ contract("Contribution contract uint tests", async accounts => {
     console.table(accts);
   });
   
-  it("...");
+  it("...", async() => {
+    const [chance, admin, prjMgrContr, contribsContr] = await createFixtures();
+    
+    const prj = {name: 'p1', totalReward: toBN(1E20), totalRewardStr: '1E20',
+                  contribPrct: 70, rewardModelAddr: constants.ZERO_ADDRESS};
+                  
+    const rcpt = await prjMgrContr.createProject(
+      prj.name, prj.totalReward, prj.contribPrct, prj.rewardModelAddr, {from: admin});
+    console.log(rcpt);
+    expectEvent(rcpt, 'ProjectCreated');
+    ev = rcpt.lgs[0].args;
+    
+    
+    
+  });
 
 });

@@ -3,7 +3,7 @@ const ProjectContract = artifacts.require("ProjectL");
 const ContributionsContract = artifacts.require("ContributionsL");
 const VotesContract = artifacts.require("VotesL");
 const IRewardModelContract = artifacts.require("IRewardModelL");
-const Only2VoteesAllowedModelContract = artifacts.require("Only2VoteesAllowedModelL");
+const ProportionalRewardModelContract = artifacts.require("ProportionalRewardModelL");
 const Top2RewardedModelContract = artifacts.require("Top2RewardedModelL");
 const WinnerTakesAllModelContract = artifacts.require("WinnerTakesAllModelL");
 const Chance = require('chance');
@@ -17,8 +17,7 @@ contract("Integrated test for normal scenario", async accounts => {
   // avoid too many accounts
   if(accounts.length > 10) accounts = accounts.slice(0, 10);
 
-  const EventNames = {
-  };
+  const EventNames = { };
 
   async function createFixtures(){
     const chance = new Chance();
@@ -54,7 +53,7 @@ contract("Integrated test for normal scenario", async accounts => {
     const contractAddrs = {}; // fill later
     
     // Deploy Conracts
-    rewardModelContrs.push(await Only2VoteesAllowedModelContract.new({from: admin}));
+    rewardModelContrs.push(await ProportionalRewardModelContract.new({from: admin}));
     rewardModelContrs.push(await Top2RewardedModelContract.new({from: admin}));
     rewardModelContrs.push(await WinnerTakesAllModelContract.new({from: admin}));
     
