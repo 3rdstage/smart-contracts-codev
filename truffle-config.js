@@ -29,6 +29,13 @@ module.exports = {
 
   networks: {
     
+    // https://www.trufflesuite.com/docs/truffle/reference/choosing-an-ethereum-client#truffle-develop
+    builtin: {    // truffle built-in client : aka `truffle develop`
+      host: '127.0.0.1',
+      port: 9545,
+      network_id: "*"
+    },
+    
     development: {
       provider: () => new HDWalletProvider(testKeys, "http://127.0.0.1:8545/", 0, testKeys.length),
       //host: ganache.host,
@@ -36,7 +43,6 @@ module.exports = {
       network_id: ganache.net,
       gas: 4E7,
       gasPrice: 2E10,
-      websockets: ganache.websocket
     },
     
     chainztest: {
@@ -71,7 +77,7 @@ module.exports = {
   compilers: {
     solc: {
       version: "^0.6.0",
-      // version: "^0.6.0",
+      //version: "0.6.12",
       //parser: "solcjs",
       settings: {
         optimizer: {

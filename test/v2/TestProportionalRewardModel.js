@@ -20,9 +20,9 @@ contract("ProportionalRewardModel contract uint tests", async accounts => {
  
     const chance = new Chance();
     const admin = chance.pickone(accounts);
-    const rewardModel = await ProportionalRewardModel.new({from: admin});
+    const rwdModel = await ProportionalRewardModel.new({from: admin});
 
-    return [chance, admin, rewardModel];
+    return [chance, admin, rwdModel];
   }
   
   before(async() => {
@@ -31,6 +31,7 @@ contract("ProportionalRewardModel contract uint tests", async accounts => {
     votees.push(accounts[2]);
     votees.push(accounts[3]);
     votees.push(accounts[4]);
+
     voters.push(accounts[5]);
     voters.push(accounts[6]);
     voters.push(accounts[7]);
@@ -43,19 +44,31 @@ contract("ProportionalRewardModel contract uint tests", async accounts => {
         await accts.push([acct, await web3.eth.getBalance(acct)]);
     }
 
-    console.debug(`The number of accounts : ${accounts.length}`);
-    console.table(accts);
+    console.debug(`Votees : ${votees.length}`);
+    console.table(votees);
+    console.debug(`Voters : ${voters.length}`);
+    console.table(voters);
+    
   });
   
-  it("Can accept struct array parameter.", async() => {
-    const [chance, admin, rewardModel] = await createFixtures();
+  it("Can calculate.", async() => {
     
-    const vts = [];
-    vts.push({voter: voters[0], votee: votees[0], amount: toBN(3E18)});
-    vts.push({voter: voters[1], votee: votees[1], amount: toBN(4E18)});
+    const [chance, admin, rwdModel] = await createFixtures();
     
-    //await rewardModel.calcContributorRewards(toBN(3E20), vts);  
+    const rwdPot = {total: toBN(1E20).toString(), contribsPercent: 70};
+
+    const vts = [];           // votes
+    vts.push({voter: voters[0], votee: votees[0], amount: toBN(3E18).toString()});  // voter1 -> A, 3ESV 
+    vts.push({voter: voters[1], votee: votees[0], amount: toBN(3E18).toString()});  // voter2 -> A, 3ESV
+    vts.push({voter: voters[2], votee: votees[1], amount: toBN(4E18).toString()});  // voter3 -> B, 4ESV
+        
+    const scrs = [];          // scores
+    scrs.push({owner: votees[0], value: toBN(6E18).toString()});
+    scrs.push({owner: votees[1], value: toBN(4E18).toString()});
     
+    //const rwds = await rwdModel.calcContributorRewards(rwdPot, vts, scrs);
+    const rslt = await debug(rwdModel.calcContributorRewards(rwdPot, vts, scrs));
+    console.log(rslt);
     
   });
 
