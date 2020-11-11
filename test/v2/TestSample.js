@@ -116,7 +116,7 @@ contract("Sample contract uint tests", async accounts => {
   });
   
   
-  it.only("Can calculate rewards.", async() => {
+  it("Can calculate rewards.", async() => {
     const [chance, admin, sampleContr] = await createFixtures();
     
     const rwdPot = {total: toBN(1E20).toString(), contribsPercent: 70};
