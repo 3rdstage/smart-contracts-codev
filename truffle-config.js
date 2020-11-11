@@ -30,8 +30,9 @@ module.exports = {
   networks: {
     
     development: {
-      host: ganache.host,
-      port: ganache.port,
+      provider: () => new HDWalletProvider(testKeys, "http://127.0.0.1:8545/", 0, testKeys.length),
+      //host: ganache.host,
+      //port: ganache.port,
       network_id: ganache.net,
       gas: 4E7,
       gasPrice: 2E10,
