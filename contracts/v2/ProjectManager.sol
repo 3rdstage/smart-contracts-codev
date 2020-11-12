@@ -53,18 +53,27 @@ contract ProjectManagerL is Context, AccessControl{
     }
 
     function createProject(string memory _name, uint256 _totalReward, uint8 _contribsPerct, address _rewardModelAddr) public onlyAdmin{
-        require(rewardModelAddrs.contains(_rewardModelAddr), "ProjectManager: The specified reward model is NOT registered yet. Register a reward model before assigning it to a project.");
-
         projectCnter.increment();
         uint256 id = projectCnter.current();
-        assert(!projects.contains(id)); // not require but assert - The project ID is managed internally.
         
-        ProjectL prj = new ProjectL(id, _name, _totalReward, _contribsPerct, _rewardModelAddr);
-        address addr = address(prj);
-        projects.set(id, addr);
-        
-        emit ProjectCreated(id, addr, _totalReward, _contribsPerct, _rewardModelAddr);
+        _createProject(id, _name, _totalReward, _contribsPerct, _rewardModelAddr);
     }
+    
+    function createProject(uint256 _id, string memory _name, uint256 _totalReward, uint8 _contribsPerct, address _rewardModelAddr) public onlyAdmin{
+        _createProject(_id, _name, _totalReward, _contribsPerct, _rewardModelAddr);    
+    }
+    
+    function _createProject(uint256 _id, string memory _name, uint256 _totalReward, uint8 _contribsPerct, address _rewardModelAddr) internal{
+        require(!projects.contains(_id), "ProjectManager: A project with the specified project ID already exisits. Try again or specify another project ID."); 
+        require(rewardModelAddrs.contains(_rewardModelAddr), "ProjectManager: The specified reward model is NOT registered yet. Register a reward model before assigning it to a project.");
+
+        ProjectL prj = new ProjectL(_id, _name, _totalReward, _contribsPerct, _rewardModelAddr);
+        address addr = address(prj);
+        projects.set(_id, addr);
+        
+        emit ProjectCreated(_id, addr, _totalReward, _contribsPerct, _rewardModelAddr);        
+    }
+    
     
     
     function getNumberOfProjects() public view returns (uint256){
@@ -130,7 +139,7 @@ contract ProjectManagerL is Context, AccessControl{
         prj.assignVoters(_voters);
     }
     
-    function simulateRewards(uint256 _prjId) external view returns(Reward[] memory voterRewards, Reward[] memory voteeRewards){
+    function simulateRewards(uint256 _prjId) external view returns(Reward[] memory voterRewards, Reward[] memory voteeRewards, uint256 remainder){
         ProjectL prj = _findProject(_prjId);
         
         IRewardModelL mdl = IRewardModelL(prj.getRewardModelAddress());
@@ -141,7 +150,7 @@ contract ProjectManagerL is Context, AccessControl{
         
         (uint256 ttl, uint8 prct) = prj.getRewardPot();
         RewardPot memory scl = RewardPot(ttl, prct);
-        return mdl.calcContributorRewards(scl, vts, scrs);
+        return mdl.calcRewards(scl, vts, scrs);
     }
 
     function distrubteRewards(uint256 _prjId) public onlyAdmin{

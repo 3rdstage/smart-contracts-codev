@@ -53,7 +53,7 @@ contract("Integrated test for normal scenario", async accounts => {
     const contractAddrs = {}; // fill later
     
     // Deploy Conracts
-    rewardModelContrs.push(await ProportionalRewardModelContract.new({from: admin}));
+    rewardModelContrs.push(await ProportionalRewardModelContract.new(15, 10, {from: admin}));
     rewardModelContrs.push(await Top2RewardedModelContract.new({from: admin}));
     rewardModelContrs.push(await WinnerTakesAllModelContract.new({from: admin}));
     
@@ -80,10 +80,12 @@ contract("Integrated test for normal scenario", async accounts => {
                    contribPrct: 70, rewardModelAddr: rewardModelContrs[0].address});
     projects.push({name: 'p2', totalReward: toBN(2E20), totalRewardStr: '2E20', 
                    contribPrct: 80, rewardModelAddr: rewardModelContrs[0].address});
-    let result = null, ev = null;
+    let result = null, prjId = 0, ev = null;
     for(const prj of projects){
+      await new Promise(r => setTimeout(r, 500));
+      prjId = Date.now().toString().substring(0, 11);
       result = await prjMgrContr.createProject(
-          prj.name, prj.totalReward, prj.contribPrct, prj.rewardModelAddr, {from: admin});
+          prjId, prj.name, prj.totalReward, prj.contribPrct, prj.rewardModelAddr, {from: admin});
       expectEvent(result, 'ProjectCreated');
       ev = result.logs[0].args;
       prj.id = ev.id.toNumber();

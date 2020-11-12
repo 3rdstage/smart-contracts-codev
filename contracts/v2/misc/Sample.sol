@@ -146,35 +146,35 @@ contract SampleL{
         require(k > 0, "ProportionalRewardModel: Top ranked votees should be at least one.");
         
         emit TieTopRankerCount(k);
-        for(uint256 i = 0; i < k; i++) emit TopRankerIdentified(k, _topVotees[i]);
+        for(uint256 i = 0; i < k; i++) emit TopRankerIdentified(i, _topVotees[i]);
         
-        // determine voters shares - voted to top ranker(s) : 15, otherwise : 10
+        // determine voters' portions - voted to top ranker(s) : 15, otherwise : 10
         uint256 m = _votes.length;                   // number of voters
-        uint256[] memory vtrShrs = new uint256[](m); // voter shares - indexed by the position in `_votes` param
+        uint256[] memory vtrPrts = new uint256[](m); // voter portions - indexed by the position in `_votes` param
         {                                            // block to avoid 'stack too deep'
             address curVtee;                         // current votee address under iteration
-
             for(uint256 i = 0; i < m; i++){
+                vtrPrts[i] = 10;                     // set base portion
                 curVtee = _votes[i].votee;
-                for(uint256 j = 0; j < k; j++){
-                    if(_topVotees[j] == curVtee){
-                        vtrShrs[i] = 15;
+                for(uint256 j = 0; j < k; j++){      // iterate over top rankers (top votees)
+                    if(_topVotees[j] == curVtee){    // if the current vote hit the one of the top rankers
+                        vtrPrts[i] = 15;             // update portion
                         break;
                     }
                 }
-                vtrShrs[i] = 10;
             }        
         }
         
-        uint256 wghedShrSum = 0;    // sum of voters' shares weighted vote amount
+        uint256 totalWghts = 0;    // sum of voters' weights (portion x vote amount)
         for(uint256 i = 0; i < m; i++){
-            wghedShrSum = wghedShrSum.add(vtrShrs[i].mul(_votes[i].amount));
+            totalWghts = totalWghts.add(vtrPrts[i].mul(_votes[i].amount));
         }
         
         voteeRewards = new Reward[](m);
         uint256 amt;                // reward amount for each voter under iteration
+        // fianlly calculate rewards for all voters
         for(uint256 i = 0; i < m; i++){
-            amt = _totalAmt.mul(_votes[i].amount).mul(vtrShrs[i]).div(wghedShrSum);
+            amt = _totalAmt.mul(_votes[i].amount).mul(vtrPrts[i]).div(totalWghts);
             voteeRewards[i] = Reward(_votes[i].voter, amt);
         }
         

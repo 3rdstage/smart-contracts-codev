@@ -16,14 +16,16 @@ contract("ProportionalRewardModel contract uint tests", async accounts => {
   const votees = []; // fill in the `before` function
   const voters = []; // fill in the `before` function
 
-  async function createFixtures(){
+  async function createFixtures(deployed = false){
  
     const chance = new Chance();
     const admin = chance.pickone(accounts);
-    const rwdModel = await ProportionalRewardModel.new({from: admin});
+    const rwdModel = (deployed) ?
+      await ProportionalRewardModel.deployed() : await ProportionalRewardModel.new(15, 10, {from: admin});
 
     return [chance, admin, rwdModel];
   }
+  
   
   before(async() => {
     assert.isAtLeast(accounts.length, 8, "There should at least 8 accounts to run this test.");
@@ -51,10 +53,9 @@ contract("ProportionalRewardModel contract uint tests", async accounts => {
     
   });
   
-  it("Can calculate.", async() => {
+  it("Can calculate the contest scenario", async() => {
     
-    const [chance, admin, rwdModel] = await createFixtures();
-    
+    const [chance, admin, rwdModel] = await createFixtures(true);
     const rwdPot = {total: toBN(1E20).toString(), contribsPercent: 70};
 
     const vts = [];           // votes
@@ -66,10 +67,142 @@ contract("ProportionalRewardModel contract uint tests", async accounts => {
     scrs.push({owner: votees[0], value: toBN(6E18).toString()});
     scrs.push({owner: votees[1], value: toBN(4E18).toString()});
     
-    //const rwds = await rwdModel.calcContributorRewards(rwdPot, vts, scrs);
-    const rslt = await debug(rwdModel.calcContributorRewards(rwdPot, vts, scrs));
+    const rslt = await rwdModel.calcRewards(rwdPot, vts, scrs);
     console.log(rslt);
     
+    assert.equal(scrs.length, rslt.voteeRewards.length);
+    assert.equal(vts.length, rslt.voterRewards.length);
+    assert.isAtLeast(rslt.remainder.toNumber(), 0);
+    assert.isTrue(toBN(42E18).eq(toBN(rslt.voteeRewards[0].amount)));
+    assert.isTrue(toBN(28E18).eq(toBN(rslt.voteeRewards[1].amount)));
+    
+    const rngs = [
+      [toBN(10.38E18), toBN(10.39E18)],
+      [toBN(10.38E18), toBN(10.39E18)],
+      [toBN(9.23E18), toBN(9.24E18)] ]
+    let amt = 0;
+    for(let i = 0; i < rslt.voterRewards.length; i++){
+      amt = toBN(rslt.voterRewards[i].amount);
+      assert.isTrue(amt.gt(rngs[i][0]) && amt.lt(rngs[i][1]));
+    }
+    
+    let sm = toBN(rslt.remainder);
+    for(const rwd of rslt.voteeRewards) sm = sm.add(toBN(rwd.amount));
+    for(const rwd of rslt.voterRewards) sm = sm.add(toBN(rwd.amount));
+    assert.isTrue(toBN(rwdPot.total).eq(sm));
+    console.log(sm.toString());
+  });
+
+  it("Can calculate a scenario where 2 votees have same score.", async() => {
+    
+    const [chance, admin, rwdModel] = await createFixtures(true);
+    const rwdPot = {total: toBN(1E20).toString(), contribsPercent: 70};
+
+    const vts = [];           // votes
+    vts.push({voter: voters[0], votee: votees[0], amount: toBN(3E18).toString()});  // voter1 -> A, 3ESV 
+    vts.push({voter: voters[1], votee: votees[0], amount: toBN(3E18).toString()});  // voter2 -> A, 3ESV
+    vts.push({voter: voters[2], votee: votees[1], amount: toBN(6E18).toString()});  // voter3 -> B, 4ESV
+        
+    const scrs = [];          // scores
+    scrs.push({owner: votees[0], value: toBN(6E18).toString()});
+    scrs.push({owner: votees[1], value: toBN(6E18).toString()});
+    
+    const rslt = await rwdModel.calcRewards(rwdPot, vts, scrs);
+    console.log(rslt);
+    
+    assert.equal(scrs.length, rslt.voteeRewards.length);
+    assert.equal(vts.length, rslt.voterRewards.length);
+    assert.isAtLeast(rslt.remainder.toNumber(), 0);
+    assert.isTrue(toBN(35E18).eq(toBN(rslt.voteeRewards[0].amount)));
+    assert.isTrue(toBN(35E18).eq(toBN(rslt.voteeRewards[1].amount)));
+    
+    assert.isTrue(toBN(7.5E18).eq(toBN(rslt.voterRewards[0].amount)));
+    assert.isTrue(toBN(7.5E18).eq(toBN(rslt.voterRewards[1].amount)));
+    assert.isTrue(toBN(15E18).eq(toBN(rslt.voterRewards[2].amount)));
+    
+    let sm = toBN(rslt.remainder);
+    for(const rwd of rslt.voteeRewards) sm = sm.add(toBN(rwd.amount));
+    for(const rwd of rslt.voterRewards) sm = sm.add(toBN(rwd.amount));
+    assert.isTrue(toBN(rwdPot.total).eq(sm));
+    console.log(sm.toString());
+  });
+
+
+  it("Can calculate a scenario where only one votee among 2 votees won all votes", async() => {
+    
+    const [chance, admin, rwdModel] = await createFixtures(true);
+    const rwdPot = {total: toBN(1E20).toString(), contribsPercent: 70};
+
+    const vts = [];           // votes
+    vts.push({voter: voters[0], votee: votees[0], amount: toBN(3E18).toString()});  // voter1 -> A, 3ESV 
+    vts.push({voter: voters[1], votee: votees[0], amount: toBN(3E18).toString()});  // voter2 -> A, 3ESV
+    vts.push({voter: voters[2], votee: votees[0], amount: toBN(4E18).toString()});  // voter3 -> B, 4ESV
+        
+    const scrs = [];          // scores
+    scrs.push({owner: votees[0], value: toBN(10E18).toString()});
+    scrs.push({owner: votees[1], value: toBN(0).toString()});
+    
+    const rslt = await rwdModel.calcRewards(rwdPot, vts, scrs);
+    console.log(rslt);
+    
+    assert.equal(scrs.length, rslt.voteeRewards.length);
+    assert.equal(vts.length, rslt.voterRewards.length);
+    assert.isAtLeast(rslt.remainder.toNumber(), 0);
+    assert.isTrue(toBN(70E18).eq(toBN(rslt.voteeRewards[0].amount)));
+    assert.isTrue(toBN(0).eq(toBN(rslt.voteeRewards[1].amount)));
+    
+    assert.isTrue(toBN(9E18).eq(toBN(rslt.voterRewards[0].amount)));
+    assert.isTrue(toBN(9E18).eq(toBN(rslt.voterRewards[1].amount)));
+    assert.isTrue(toBN(12E18).eq(toBN(rslt.voterRewards[2].amount)));
+    
+    let sm = toBN(rslt.remainder);
+    for(const rwd of rslt.voteeRewards) sm = sm.add(toBN(rwd.amount));
+    for(const rwd of rslt.voterRewards) sm = sm.add(toBN(rwd.amount));
+    assert.isTrue(toBN(rwdPot.total).eq(sm));
+    console.log(sm.toString());
+  });
+
+
+  it("Can calculate a scenario where all 3 votees have different scores.", async() => {
+    
+    const [chance, admin, rwdModel] = await createFixtures(true);
+    const rwdPot = {total: toBN(1E20).toString(), contribsPercent: 70};
+
+    const vts = [];           // votes
+    vts.push({voter: voters[0], votee: votees[1], amount: toBN(7E18).toString()});  // voter1 -> A, 3ESV 
+    vts.push({voter: voters[1], votee: votees[2], amount: toBN(3E18).toString()});  // voter2 -> A, 3ESV
+    vts.push({voter: voters[2], votee: votees[0], amount: toBN(4E18).toString()});  // voter3 -> B, 4ESV
+        
+    const scrs = [];          // scores
+    scrs.push({owner: votees[0], value: toBN(4E18).toString()});
+    scrs.push({owner: votees[1], value: toBN(7E18).toString()});
+    scrs.push({owner: votees[2], value: toBN(3E18).toString()});
+    
+    const rslt = await rwdModel.calcRewards(rwdPot, vts, scrs);
+    console.log(rslt);
+    
+    assert.equal(scrs.length, rslt.voteeRewards.length);
+    assert.equal(vts.length, rslt.voterRewards.length);
+    assert.isAtLeast(rslt.remainder.toNumber(), 0);
+    assert.isTrue(toBN(20E18).eq(toBN(rslt.voteeRewards[0].amount)));
+    assert.isTrue(toBN(35E18).eq(toBN(rslt.voteeRewards[1].amount)));
+    assert.isTrue(toBN(15E18).eq(toBN(rslt.voteeRewards[2].amount)));
+    
+    const rngs = [
+      [toBN(18E18), toBN(18E18)],
+      [toBN(5.14E18), toBN(5.15E18)],   // 5.1429...
+      [toBN(6.85E18), toBN(6.86E18)] ]
+    let amt = 0;
+    for(let i = 0; i < rslt.voterRewards.length; i++){
+      amt = toBN(rslt.voterRewards[i].amount);
+      assert.isTrue(amt.gte(rngs[i][0]) && amt.lte(rngs[i][1]));
+    }
+    
+    let sm = toBN(rslt.remainder);
+    for(const rwd of rslt.voteeRewards) sm = sm.add(toBN(rwd.amount));
+    for(const rwd of rslt.voterRewards) sm = sm.add(toBN(rwd.amount));
+    assert.isTrue(toBN(rwdPot.total).eq(sm));
+    console.log(sm.toString());
   });
 
 });

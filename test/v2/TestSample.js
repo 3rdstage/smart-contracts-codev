@@ -38,7 +38,8 @@ contract("Sample contract uint tests", async accounts => {
     let balance = 0;
 
     for(const acct of accounts){
-        await web3.eth.personal.unlockAccount(acct);
+        // may not be allowed by the node
+        //await web3.eth.personal.unlockAccount(acct);
         await accts.push([acct, await web3.eth.getBalance(acct)]);
     }
 
@@ -141,7 +142,7 @@ contract("Sample contract uint tests", async accounts => {
     scrs.push({owner: votees[0], value: toBN(6E18).toString()});
     scrs.push({owner: votees[1], value: toBN(6E18).toString()});
     
-    //rslt = await sampleContr.testCalcRewards(rwdPot, vts, scrs);
+    rslt = await sampleContr.testCalcRewards(rwdPot, vts, scrs);
     //console.log(rslt);
 
     

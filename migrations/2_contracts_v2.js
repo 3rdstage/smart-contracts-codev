@@ -13,7 +13,7 @@ module.exports = async function (deployer, network, accounts) {
 
   // `ProjectManager` contract and `IRewardModel` implementation contracts  
   await deployer.deploy(ProjectManager, {from: admin});
-  await deployer.deploy(ProportionalRewardModel, {from: admin});
+  await deployer.deploy(ProportionalRewardModel, 15, 10, {from: admin});
   await deployer.deploy(EvenVoterRewardModel, {from: admin});
   await deployer.deploy(Top2RewardedModel, {from: admin});
   await deployer.deploy(WinnerTakesAllModel, {from: admin});

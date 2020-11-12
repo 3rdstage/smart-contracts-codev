@@ -4,22 +4,35 @@
 
 * ***Extended Domain Model***
     * Inclusive and extended
-    * `RewardPolicy` - pluggable logic
-    * `ProjectFactory` - factory pattern
     
 * ***Modulization***
-    * Divide and Conquer
-    * High Cohesion and Low Coupling
+    > High Cohesion and Low Coupling
+
+    > [Separation of Concerns](https://en.wikipedia.org/wiki/Separation_of_concerns)
+
+    > [Single-responsibility Principle](https://en.wikipedia.org/wiki/Single-responsibility_principle)
+
+    > Divide and Conquer
+* 
+    * Examples in this project 
+        * Pluggabel reward model(policy) 
+            * `IRewardMdel` - `ProportionalRewardModel`, `EvenVoterRewardModel`, `WinnerTakesAllModel`, ...
+    * Factory and facade(partially) pattern : `ProjectManager` contract
+
+    * Later extension candidates
+        * `Evaluation`, `Patent`
+        * Flow control - Before Vote, Vote Open, Vote Closed, Vote Canceled, Rewarded ...
+        * Min. and max. for voting amount
     
 * ***On-chain First***
+    * All important data are inside ***on-chain***
+        * Project master, Contribution master, Vote, Token, ...
     * Minimize off-chain usage
     * Iteration using only on-chain data
         * `findContributionsByProject(int projectId)`
     
 * ***More Fluent API using ABIEncoderV2***
-    * Dyanmic array or struct in function parameters and outputs
-
-* ***Follow EIP Standars***
+    * Dyanmic array or struct in function parameters and returns
     
 * ***Secure Contract***
     * Code inspection using `MythX`(ConsenSys), `Slither`, and `Solhint`

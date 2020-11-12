@@ -7,7 +7,7 @@ import "../IRewardModel.sol";
 
 contract WinnerTakesAllModelL is IRewardModelL{
     
-    string private constant name = "Winner-Takes-All Reward Model";
+    string private constant name = "Winner-Takes-All reward model";
     
     
     function getName() external view override returns (string memory){
@@ -15,15 +15,15 @@ contract WinnerTakesAllModelL is IRewardModelL{
     }
     
     
-    function calcContributorRewards(RewardPot calldata _rewardPot, Vote[] calldata _votes, Score[] calldata _scores) 
-        external view override returns (Reward[] memory voterRewards, Reward[] memory voteeRewards){
-
-    }
-
-    function calcVoterRewards(uint256 _totalAmount, Vote[] calldata _votes) 
-        external view override returns (Reward[] memory voterRewards, Reward[] memory voteeRewards){
+    function calcRewards(RewardPot calldata _rewardPot, Vote[] calldata _votes, Score[] calldata _scores) 
+        external view override virtual returns (Reward[] memory voterRewards, Reward[] memory voteeRewards, uint256 remainder){
+    
+        if(true){ revert("Not yet implemented."); }
+        //@TODO implement later
         
+        voteeRewards = new Reward[](_scores.length);
+        voterRewards = new Reward[](_votes.length);
+        remainder = _rewardPot.total;
     }
-    
-    
+
 }

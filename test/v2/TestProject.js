@@ -36,7 +36,7 @@ contract("Project contract uint tests", async accounts => {
         await accts.push([acct, await web3.eth.getBalance(acct)]);
     }
 
-    rewardModels.push(await ProportionalRewardModel.new({from: accounts[0]}));
+    rewardModels.push(await ProportionalRewardModel.new(15, 10, {from: accounts[0]}));
     rewardModels.push(await Top2RewardedModel.new({from: accounts[0]}));
     rewardModels.push(await WinnerTakesAllModel.new({from: accounts[0]}));
 

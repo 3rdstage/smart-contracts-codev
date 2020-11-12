@@ -1,4 +1,5 @@
 const ProjectManagerContr = artifacts.require("ProjectManagerL");
+const ProportionalRewardModelContract = artifacts.require("ProportionalRewardModelL");
 const ContributionsContr = artifacts.require("ContributionsL");
 const Chance = require('chance');
 const toBN = web3.utils.toBN;
@@ -14,13 +15,22 @@ contract("Contribution contract uint tests", async accounts => {
   const votees = []; // fill in the `before` function
   const voters = []; // fill in the `before` function
 
-  async function createFixtures(){
- 
+  async function createFixtures(deployed = false){
+    
     const chance = new Chance();
     const admin = chance.pickone(accounts);
-    const prjMgrContr = await ProjectManagerContr.new({from: admin});
-    const contribsContr = await ContributionsContr.new(prjMgrContr.address, {from: admin});
-
+    let prjMgrContr, contribsContr;
+    
+    if(deployed){
+      prjMgrContr = await ProjectManagerContr.deployed();
+      contribsContr = await ContributionsContr.deployed();
+    }else{
+      prjMgrContr = await ProjectManagerContr.new({from: admin});
+      const rwdModelContr = await ProportionalRewardModelContract.new(15, 10, {from: admin})
+      await prjMgrContr.registerRewardModel(rwdModelContr.address, {from: admin});
+      contribsContr = await ContributionsContr.new(prjMgrContr.address, {from: admin});
+    }
+  
     return [chance, admin, prjMgrContr, contribsContr];
   }
   
@@ -46,20 +56,22 @@ contract("Contribution contract uint tests", async accounts => {
     console.table(accts);
   });
   
-  it("...", async() => {
+  it("Can create project.", async() => {
     const [chance, admin, prjMgrContr, contribsContr] = await createFixtures();
     
+    const rwdMdl = await prjMgrContr.getRewardModel(0);    
+    
+    console.log(rwdMdl);          
+    
     const prj = {name: 'p1', totalReward: toBN(1E20), totalRewardStr: '1E20',
-                  contribPrct: 70, rewardModelAddr: constants.ZERO_ADDRESS};
-                  
+                  contribPrct: 70, rewardModelAddr: rwdMdl.addr};
+    
     const rcpt = await prjMgrContr.createProject(
-      prj.name, prj.totalReward, prj.contribPrct, prj.rewardModelAddr, {from: admin});
+      Date.now().toString().substring(0, 12), prj.name, 
+      prj.totalReward, prj.contribPrct, prj.rewardModelAddr, {from: admin});
     console.log(rcpt);
     expectEvent(rcpt, 'ProjectCreated');
-    ev = rcpt.lgs[0].args;
-    
-    
-    
+    const ev = rcpt.logs[0].args;
   });
 
 });

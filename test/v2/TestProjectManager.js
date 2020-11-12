@@ -39,7 +39,7 @@ contract("ProjectManager contract uint tests", async accounts => {
         await accts.push([acct, await web3.eth.getBalance(acct)]);
     }
 
-    rewardModels.push(await ProportionalRewardModel.new({from: accounts[0]}));
+    rewardModels.push(await ProportionalRewardModel.new(15, 10, {from: accounts[0]}));
     rewardModels.push(await Top2RewardedModel.new({from: accounts[0]}));
     rewardModels.push(await WinnerTakesAllModel.new({from: accounts[0]}));
 
@@ -65,14 +65,16 @@ contract("ProjectManager contract uint tests", async accounts => {
     await registerRewardModels(prjMgr, rewardModels, admin);
     
     const n = chance.natural({min: 3, max: 10});
-    let name = null, totalRwd = 0, cntrbPrct = 0, rwdMdlAddr = 0;
+    let name = null, prjId = 0, totalRwd = 0, cntrbPrct = 0, rwdMdlAddr = 0;
     for(let i = 0; i < n; i++){
       name = chance.word({length: 10});
       totalRwd = toBN(1E20).muln(chance.natural({min: 1, max: 5})); // total reward
       cntrbPrct = chance.natural({min: 1, max: 99});  // contributors reward pecent           
       rwdMdlAddr = chance.pickone(rewardModels).address; // reward model address
+      prjId = Date.now().toString().substring(0, 12);
       
-      await prjMgr.createProject(name, totalRwd, cntrbPrct, rwdMdlAddr, {from: admin});
+      await prjMgr.createProject(
+        prjId, name, totalRwd, cntrbPrct, rwdMdlAddr, {from: admin});
     }
   
     const cnt = await prjMgr.getNumberOfProjects();
