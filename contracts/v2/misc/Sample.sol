@@ -65,7 +65,6 @@ contract SampleL{
         total = _rwdPot.total;
         prct = _rwdPot.contribsPercent;
         score = _scr;
-        
     }    
     
     
@@ -177,7 +176,6 @@ contract SampleL{
             amt = _totalAmt.mul(_votes[i].amount).mul(vtrPrts[i]).div(totalWghts);
             voteeRewards[i] = Reward(_votes[i].voter, amt);
         }
-        
     }
     
     function testLocalUintArray(uint256 _size, uint256 _fillups, uint256 _fillVal) external pure returns (uint256[] memory){
@@ -188,7 +186,6 @@ contract SampleL{
         for(uint256 i = 0; i < _fillups; i++) values[i] = _fillVal;
 
         return values;
-
     }
 
     function testLocalAddressArray(uint256 _size, uint256 _fillups, address _fillVal) external pure returns (address[] memory){
@@ -199,7 +196,13 @@ contract SampleL{
         for(uint256 i = 0; i < _fillups; i++) values[i] = _fillVal;
 
         return values;
-
+    }
+    
+    
+    function testRevertAndEvent() external{
+        emit HereArrived(1, 207);
+        
+        revert();
     }
     
 }

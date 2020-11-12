@@ -7,10 +7,12 @@ import "../../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
 import "../../node_modules/@openzeppelin/contracts/utils/EnumerableMap.sol";
 import "../../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
 import "../../node_modules/@openzeppelin/contracts/utils/Counters.sol";
+import "./tokens/RegularERC20Token.sol";
 import "./Commons.sol";
 import "./Project.sol";
 import "./Votes.sol";
 import "./IRewardModel.sol";
+
 
 contract ProjectManagerL is Context, AccessControl{
     using Counters for Counters.Counter;
@@ -27,13 +29,15 @@ contract ProjectManagerL is Context, AccessControl{
     
     Counters.Counter private projectCnter;
     
-    EnumerableMap.UintToAddressMap private projects;  // Map(key: id, value: address)
+    RegularERC20TokenL private token;                  // token contract for reward
     
-    mapping(address => string) private rewardModels; // Map(key: address, value: name)
+    EnumerableMap.UintToAddressMap private projects;   // id:address map for project contracts
     
-    EnumerableSet.AddressSet private rewardModelAddrs; // keys for rewardModels;
+    mapping(address => string) private rewardModels;   // address:name map for reward models
     
-    VotesL private votesContract; // votes contract
+    EnumerableSet.AddressSet private rewardModelAddrs; // keys for reward models' map - for safe access or iteration
+    
+    VotesL private votesContract;                      // votes contract
 
     event ProjectCreated(uint256 indexed id, address addr, uint256 totalReward, uint8 contirbPercent, address rewardModelAddr);
 
@@ -42,10 +46,22 @@ contract ProjectManagerL is Context, AccessControl{
         _;
     }
     
-    constructor() public{
+    /**
+     * 
+     * To distribute rewards, it is neccesary to grant MINTER_ROLE of the token to this project manager contract
+     * outside of this contract usually at contract deploy time.
+     */
+    constructor(address _tknAddr) public{
+        require(_tknAddr != address(0), "ProjectManager: Token address can NOT be ZERO address.");
+        token = RegularERC20TokenL(_tknAddr);    
+        
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
     
+    function getTokenAddress() external view returns (address){
+        return address(token);
+    }
+
     function setVotesContact(address _addr) public onlyAdmin{
         require(_addr != address(0), "ProjectManager: Votes contract can't be ZERO address");
         
@@ -73,9 +89,7 @@ contract ProjectManagerL is Context, AccessControl{
         
         emit ProjectCreated(_id, addr, _totalReward, _contribsPerct, _rewardModelAddr);        
     }
-    
-    
-    
+
     function getNumberOfProjects() public view returns (uint256){
         return projects.length();
     }
@@ -139,6 +153,22 @@ contract ProjectManagerL is Context, AccessControl{
         prj.assignVoters(_voters);
     }
     
+    /**
+     * Try to collect token (send token to me from owner) using `transferFrom` function.
+     * It would fail unless the `_owner` previously approved this project manager address as much
+     * allowance as `_amt`.
+     * 
+     * After collecting token from a voter, as much token is approved to votes contract, 
+     * in case of unvote or update vote from the same voter
+     */
+    function collectFrom(address _owner, uint256 _amt) public{
+        // collect token from voter
+        token.transferFrom(_owner, address(this), _amt);
+        
+        // approve as much token to votes contract, in case of unvote or update vote
+        token.approve(address(votesContract), _amt);
+    }
+    
     function simulateRewards(uint256 _prjId) external view returns(Reward[] memory voterRewards, Reward[] memory voteeRewards, uint256 remainder){
         ProjectL prj = _findProject(_prjId);
         
@@ -157,5 +187,7 @@ contract ProjectManagerL is Context, AccessControl{
 
         
     }
+    
+    
 
 }

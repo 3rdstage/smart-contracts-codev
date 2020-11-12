@@ -7,6 +7,7 @@ import "../../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
 import "../../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
 import "../../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
 import "../../node_modules/@openzeppelin/contracts/utils/Counters.sol";
+import "./tokens/RegularERC20Token.sol";
 import "./Commons.sol";
 import "./ProjectManager.sol";
 import "./Project.sol";
@@ -17,20 +18,24 @@ contract VotesL is Context, AccessControl{
     using EnumerableSet for EnumerableSet.AddressSet;
     using SafeMath for uint256;
 
-    ProjectManagerL private projectManager;  // project manager contract
+    ProjectManagerL private projectManager;   // project manager contract
     
     ContributionsL private contribsContract;  // contributions contract
+    
+    RegularERC20TokenL private token;         // token contract
 
      // votes by project and voter
-    mapping(uint256 => mapping(address => Vote)) private votes;    // (project, voter) => (votee, amount)
+    mapping(uint256 => mapping(address => Vote)) private votes;     // (project, voter) => (votee, amount)
     
-    mapping(uint256 => EnumerableSet.AddressSet) private voters;   // project => voter, keys of votes, for safe access or iteration
+    mapping(uint256 => EnumerableSet.AddressSet) private voters;    // project => voter, key-set of votes, for safe access or iteration
     
-    mapping(uint256 => mapping(address => uint256)) private scores;  // (project, votee) => score
+    mapping(uint256 => mapping(address => uint256)) private scores; // (project, votee) => score
     
-    mapping(uint256 => EnumerableSet.AddressSet) private votees;  // project => votee, keys of scores, for safe access or iteration
+    mapping(uint256 => EnumerableSet.AddressSet) private votees;    // project => votee, key-set of scores, for safe access or iteration
 
     event Voted(uint256 indexed projectId, address indexed voter, address indexed votee, uint256 amt, uint256 score);
+    
+    event NoPreviousVote(uint256 indexed projectId, address indexed voter);
     
     event Unvoted(uint256 indexed projectId, address indexed voter);
     
@@ -45,6 +50,7 @@ contract VotesL is Context, AccessControl{
         
         projectManager = ProjectManagerL(_prjMgr);
         contribsContract = ContributionsL(_contribsCtr);
+        token = RegularERC20TokenL(projectManager.getTokenAddress());
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());        
     }
     
@@ -59,17 +65,18 @@ contract VotesL is Context, AccessControl{
         address vtr = _msgSender(); // voter
         ProjectL prj = ProjectL(projectManager.getProjectAddress(_prjId));
         require(prj.hasVoter(vtr), "Votes: Message sender is not a voter for the specified project.");
+        
+        // check allowance
+        require(token.allowance(vtr, address(projectManager)) >= _amt, "Votes: Token as much as voting amount should be approved to the project manager address before vote.");
+        // collect voting amount first
+        projectManager.collectFrom(vtr, _amt);
 
-        // update `scores` first
-        if(votes[_prjId][vtr].voter != address(0)){    // has pervious vote
-            uint256 amt0 = votes[_prjId][vtr].amount;  // previous vote amount
-            uint256 scr0 = scores[_prjId][_votee];     // votee's current score
-            scores[_prjId][_votee] = scr0.sub(amt0).add(_amt);
-        }else{                                         // has no previous vote
-            uint256 scr0 = scores[_prjId][_votee];     // votee's current score, is 0 when no voter has voted for this votee before
-            scores[_prjId][_votee] = scr0.add(_amt);
-        }
-        votees[_prjId].add(_votee);                    // update `scores`' keys
+        // unvote first if necessary
+        if(votes[_prjId][vtr].voter != address(0)) _unvote(_prjId, vtr);
+
+        uint256 scr1 = scores[_prjId][_votee];    // votee's current score
+        scores[_prjId][_votee] = scr1.add(_amt);  // update votee's score
+        votees[_prjId].add(_votee);               // update `scores`' keys
 
         // update `votes` and `votes`' keys
         votes[_prjId][vtr] = Vote(vtr, _votee, _amt);
@@ -80,15 +87,31 @@ contract VotesL is Context, AccessControl{
     
     
     // @TODO Not complete - remove or finish this.
-    function unvote(uint256 _prjId, address) public{
+    function unvote(uint256 _prjId) public{
         require(projectManager.hasProject(_prjId), "Votes: There is no such project.");
         
-        address vtr = _msgSender(); // voter
-        delete votes[_prjId][vtr];
-        voters[_prjId].remove(vtr);
-        emit Unvoted(_prjId, vtr);
+        _unvote(_prjId, _msgSender());
     }
     
+    function _unvote(uint256 _prjId, address _voter) internal{
+
+        Vote memory vt0 = votes[_prjId][_voter];
+        if(vt0.voter != address(0)){                  // has pervious vote
+            address vtee0 = vt0.votee;                // previous votee
+            uint256 amt0 = vt0.amount;                // previous vote amount
+            uint256 scr0 = scores[_prjId][vtee0];     // previous votee's current score
+            scores[_prjId][vtee0] = scr0.sub(amt0);   // update previous votee's score
+            
+            delete votes[_prjId][_voter];             // remove prev. vote from votes
+            voters[_prjId].remove(_voter);            // update votes' key-set
+            
+            token.transferFrom(address(projectManager), _voter, amt0);  // refund previous voting amount
+            emit Unvoted(_prjId, _voter);
+        }else{
+            emit NoPreviousVote(_prjId, _voter);
+        }
+    }
+
     function getVote(uint256 _prjId, address _voter) public view returns (address, uint256) {
         
         Vote memory vt = votes[_prjId][_voter];

@@ -1,3 +1,4 @@
+const RegularERC20Token = artifacts.require("RegularERC20TokenL");
 const ProjectManager = artifacts.require("ProjectManagerL");
 const IRewardModel = artifacts.require("IRewardModelL");
 const ProportionalRewardModel = artifacts.require("ProportionalRewardModelL");
@@ -16,11 +17,18 @@ contract("ProjectManager contract uint tests", async accounts => {
 
   const rewardModels = [];
 
-  async function createFixtures(){
+  async function createFixtures(deployed = false){
     const chance = new Chance();
     const admin = chance.pickone(accounts);
-    const prjMgr = await ProjectManager.new({from: admin});
-
+    let prjMgr;
+    
+    if(deployed){
+      prjMgr = await ProjectManager.deployed();
+    }else{
+      const tkn = await RegularERC20Token.new("Environment Social Value Token", "ESV", {from: admin});
+      prjMgr = await ProjectManager.new(tkn.address, {from: admin});
+    }
+    
     return [chance, admin, prjMgr];
   }
   
@@ -65,13 +73,14 @@ contract("ProjectManager contract uint tests", async accounts => {
     await registerRewardModels(prjMgr, rewardModels, admin);
     
     const n = chance.natural({min: 3, max: 10});
+    const epc = Date.now();
     let name = null, prjId = 0, totalRwd = 0, cntrbPrct = 0, rwdMdlAddr = 0;
     for(let i = 0; i < n; i++){
       name = chance.word({length: 10});
       totalRwd = toBN(1E20).muln(chance.natural({min: 1, max: 5})); // total reward
       cntrbPrct = chance.natural({min: 1, max: 99});  // contributors reward pecent           
       rwdMdlAddr = chance.pickone(rewardModels).address; // reward model address
-      prjId = Date.now().toString().substring(0, 12);
+      prjId = (epc + i).toString().substring(3);
       
       await prjMgr.createProject(
         prjId, name, totalRwd, cntrbPrct, rwdMdlAddr, {from: admin});

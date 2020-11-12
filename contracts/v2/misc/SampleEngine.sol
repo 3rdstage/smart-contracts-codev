@@ -5,7 +5,6 @@ pragma experimental ABIEncoderV2;
 import "../Commons.sol";
 
 contract SampleEngineL{
-    
 
     event VoteAccepted(address indexed voter, address indexed votee, uint256 amount, uint256 total);
     

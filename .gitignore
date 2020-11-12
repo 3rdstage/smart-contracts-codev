@@ -51,7 +51,7 @@ contracts/**/artifacts/
 !/node_modules/@openzeppelin/contracts/
 /node_modules/@openzeppelin/contracts/build
 /node_modules/@openzeppelin/contracts/package.json
-
+/node_modules/@openzeppelin/contracts/**/artifacts
 
 
 

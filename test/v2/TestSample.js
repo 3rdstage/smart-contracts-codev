@@ -170,5 +170,11 @@ contract("Sample contract uint tests", async accounts => {
     
   });
   
+  it.skip("Events would not be emitted if the transaction is reverted.", async() => {
+    const [chance, admin, sampleContr] = await createFixtures();
+    
+    await expectRevert(sampleContr.testRevertAndEvent());
+  });
+  
 
 });

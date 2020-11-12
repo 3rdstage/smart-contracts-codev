@@ -25,6 +25,12 @@ contract ProjectL is Ownable{
     
     event RewardPotUpdated(uint256 indexed projectId, uint256 totalReward, uint8 contribsPercent);
     
+    event RewardModelDesignated(uint256 indexed projectId, address modelAddr);
+    
+    event VoterAssigned(uint256 indexed projectId, address voter);
+    
+    event VoterUnassigned(uint256 indexed projectId, address voter);
+    
     event RewardDistributed(uint256 indexed projectId);
     
     constructor(uint256 _id, string memory _name, uint256 _totalReward, uint8 _contribsPerct, address _rewardModelAddr) public{
@@ -66,6 +72,7 @@ contract ProjectL is Ownable{
         require(!rewarded, "Project: Reward model can't be changed, because this project was already rewarded.");
         
         rewardModel = IRewardModelL(_addr);
+        emit RewardModelDesignated(id, _addr);
     }
     
     function hasRewardModel() external view returns (bool){
@@ -76,17 +83,24 @@ contract ProjectL is Ownable{
         return address(rewardModel);
     }
 
-
     function assignVoters(address[] calldata _voters) external onlyOwner{
         uint256 l = _voters.length;
         for(uint i = 0; i < l; i++) require(_voters[i] != address(0), "Project: Voter address can't be ZERO address.");
         
-        //@TODO What about `delete voters` - `delete` on struct in local
         l = voters.length();
-        for(uint256 i = l; i > 0; i--) voters.remove(voters.at(i - 1));
+        address vter;
+        for(uint256 i = l; i > 0; i--){
+            vter = voters.at(i - 1);
+            voters.remove(vter);
+            emit VoterUnassigned(id, vter);
+        }
 
         l = _voters.length;
-        for(uint i = 0; i < l; i++) voters.add(_voters[i]);
+        for(uint i = 0; i < l; i++){
+            vter = _voters[i];
+            voters.add(_voters[i]);
+            emit VoterAssigned(id, _voters[i]);
+        } 
     }
     
     // will retrun empty array at initial state

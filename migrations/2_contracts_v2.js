@@ -1,4 +1,5 @@
 const Migrations = artifacts.require("Migrations");
+const RegularERC20Token = artifacts.require("RegularERC20TokenL");
 const ProjectManager = artifacts.require("ProjectManagerL");
 const ProportionalRewardModel = artifacts.require("ProportionalRewardModelL");
 const EvenVoterRewardModel = artifacts.require("EvenVoterRewardModelL");
@@ -11,8 +12,12 @@ module.exports = async function (deployer, network, accounts) {
   
   const admin = accounts[0];
 
-  // `ProjectManager` contract and `IRewardModel` implementation contracts  
-  await deployer.deploy(ProjectManager, {from: admin});
+  // Token
+  await deployer.deploy(RegularERC20Token, "Environment Social Value Token", "ESV", {from: admin});
+  const tkn = await RegularERC20Token.deployed();
+  
+  // `ProjectManager` and `IRewardModel` implementations
+  await deployer.deploy(ProjectManager, tkn.address, {from: admin});
   await deployer.deploy(ProportionalRewardModel, 15, 10, {from: admin});
   await deployer.deploy(EvenVoterRewardModel, {from: admin});
   await deployer.deploy(Top2RewardedModel, {from: admin});
@@ -24,6 +29,8 @@ module.exports = async function (deployer, network, accounts) {
   const top2Mdl = await Top2RewardedModel.deployed();
   const winnerMdl = await WinnerTakesAllModel.deployed();
   
+  // grant minter role to project manager
+  await tkn.grantRole(await tkn.MINTER_ROLE(), prjMgr.address);
   await prjMgr.registerRewardModel(propMdl.address, {from: admin});
   await prjMgr.registerRewardModel(evenMdl.address, {from: admin});
   await prjMgr.registerRewardModel(top2Mdl.address, {from: admin});
