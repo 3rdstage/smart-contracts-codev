@@ -72,13 +72,6 @@ contract ProjectManagerL is Context, AccessControl{
         votesContract = VotesL(_addr);
     }
 
-    function createProject(string memory _name, uint256 _totalReward, uint8 _contribsPerct, address _rewardModelAddr) public onlyAdmin{
-        projectCnter.increment();
-        uint256 id = projectCnter.current();
-        
-        _createProject(id, _name, _totalReward, _contribsPerct, _rewardModelAddr);
-    }
-    
     function createProject(uint256 _id, string memory _name, uint256 _totalReward, uint8 _contribsPerct, address _rewardModelAddr) public onlyAdmin{
         _createProject(_id, _name, _totalReward, _contribsPerct, _rewardModelAddr);    
     }
@@ -219,7 +212,5 @@ contract ProjectManagerL is Context, AccessControl{
 
         
     }
-    
-    
 
 }
