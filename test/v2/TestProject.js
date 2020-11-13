@@ -1,7 +1,7 @@
 const Project = artifacts.require("ProjectL");
 const IRewardModel = artifacts.require("IRewardModelL");
 const ProportionalRewardModel = artifacts.require("ProportionalRewardModelL");
-const Top2RewardedModel = artifacts.require("Top2RewardedModelL");
+const EvenVoterRewardModel = artifacts.require("EvenVoterRewardModelL");
 const WinnerTakesAllModel = artifacts.require("WinnerTakesAllModelL");
 const Chance = require('chance');
 const toBN = web3.utils.toBN;
@@ -16,9 +16,9 @@ contract("Project contract uint tests", async accounts => {
 
   const rewardModels = [];
 
-  async function createFixtures(){
+  async function prepareFixtures(){
     const chance = new Chance();
-    const admin = chance.pickone(accounts);
+    const admin = accounts[0];
     const id = 1, name = 'Test Project';
     const totalRwd = toBN(1E20).muln(chance.natural({min: 1, max: 5}));
     const cntrbsPrct = chance.natural({min: 50, max: 80});
@@ -37,7 +37,7 @@ contract("Project contract uint tests", async accounts => {
     }
 
     rewardModels.push(await ProportionalRewardModel.deployed());
-    rewardModels.push(await Top2RewardedModel.deployed());
+    rewardModels.push(await EvenVoterRewardModel.deployed());
     rewardModels.push(await WinnerTakesAllModel.deployed());
 
     console.debug(`The number of accounts : ${accounts.length}`);
@@ -75,7 +75,7 @@ contract("Project contract uint tests", async accounts => {
   
   it("Should have no voters and be not rewarded initially", async() => {
     
-    const [chance, amdin, project] = await createFixtures();
+    const [chance, amdin, project] = await prepareFixtures();
     
     const voters = await project.getVoters();
     assert.isEmpty(voters, "Project should have NO voters assigned initially.");
@@ -84,7 +84,7 @@ contract("Project contract uint tests", async accounts => {
   
   // setVoters(), getVoters()
   it("Can specify voters", async() =>{
-    const [chance, admin, project] = await createFixtures();
+    const [chance, admin, project] = await prepareFixtures();
     
     const voters = chance.pickset(accounts, 3);
     

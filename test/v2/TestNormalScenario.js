@@ -4,8 +4,8 @@ const ProjectContract = artifacts.require("ProjectL");
 const ContributionsContract = artifacts.require("ContributionsL");
 const VotesContract = artifacts.require("VotesL");
 const IRewardModelContract = artifacts.require("IRewardModelL");
+const EvenVoterRewardModelContract = artifacts.require("EvenVoterRewardModelL");
 const ProportionalRewardModelContract = artifacts.require("ProportionalRewardModelL");
-const Top2RewardedModelContract = artifacts.require("Top2RewardedModelL");
 const WinnerTakesAllModelContract = artifacts.require("WinnerTakesAllModelL");
 const Chance = require('chance');
 const toBN = web3.utils.toBN;
@@ -20,10 +20,10 @@ contract("Integrated test for normal scenario", async accounts => {
 
   const EventNames = { };
 
-  async function createFixtures(){
+  async function prepareFixtures(deployed = false){
     const chance = new Chance();
-    const admin = chance.pickone(accounts);
-
+    const admin = (deployed) ? accounts[0] : chance.pickone(accounts);
+ 
     return [chance, admin];
   }
   
@@ -76,8 +76,8 @@ contract("Integrated test for normal scenario", async accounts => {
 
     // Identify contracts    
     rwdMdlContrs.push(await ProportionalRewardModelContract.deployed());
+    rwdMdlContrs.push(await EvenVoterRewardModelContract.deployed());
     rwdMdlContrs.push(await WinnerTakesAllModelContract.deployed());
-    rwdMdlContrs.push(await Top2RewardedModelContract.deployed());
     
     const tknContr = await RegularERC20Token.deployed();
     const prjMgrContr = await ProjectManagerContract.deployed();

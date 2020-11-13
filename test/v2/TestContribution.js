@@ -16,17 +16,16 @@ contract("Contribution contract uint tests", async accounts => {
   const votees = []; // fill in the `before` function
   const voters = []; // fill in the `before` function
 
-  async function createFixtures(deployed = false){
+  async function prepareFixtures(deployed = false){
     
     const chance = new Chance();
-    let admin, tknContr, prjMgrContr, contribsContr;
+    const admin = (deployed) ? accounts[0] : chance.pickone(accounts);
+    let tknContr, prjMgrContr, contribsContr;
     
     if(deployed){
-      admin = accounts[0];
       prjMgrContr = await ProjectManagerContr.deployed();
       contribsContr = await ContributionsContr.deployed();
     }else{
-      admin = chance.pickone(accounts)
       tknContr = await RegularERC20Token.new("Environment Social Value Token", "ESV", {from: admin});
       prjMgrContr = await ProjectManagerContr.new(tknContr.address, {from: admin});
       const rwdModelContr = await ProportionalRewardModelContract.new(15, 10, {from: admin})
@@ -41,7 +40,7 @@ contract("Contribution contract uint tests", async accounts => {
     assert.isAtLeast(accounts.length, 8, "There should at least 8 accounts to run this test.");
     
     votees.push(accounts[3]);
-    votees.push(accounts[4]]);
+    votees.push(accounts[4]);
     votees.push(accounts[5]);
     voters.push(accounts[6]);
     voters.push(accounts[7]);
@@ -59,7 +58,7 @@ contract("Contribution contract uint tests", async accounts => {
   });
   
   it("Can create project.", async() => {
-    const [chance, admin, prjMgrContr, contribsContr] = await createFixtures(true);
+    const [chance, admin, prjMgrContr, contribsContr] = await prepareFixtures(true);
     
     const rwdMdl = await prjMgrContr.getRewardModel(0);    
     

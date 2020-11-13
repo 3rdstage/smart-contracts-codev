@@ -2,7 +2,7 @@ const RegularERC20Token = artifacts.require("RegularERC20TokenL");
 const ProjectManager = artifacts.require("ProjectManagerL");
 const IRewardModel = artifacts.require("IRewardModelL");
 const ProportionalRewardModel = artifacts.require("ProportionalRewardModelL");
-const Top2RewardedModel = artifacts.require("Top2RewardedModelL");
+const EvenVoterRewardModel = artifacts.require("EvenVoterRewardModelL");
 const WinnerTakesAllModel = artifacts.require("WinnerTakesAllModelL");
 const Chance = require('chance');
 const toBN = web3.utils.toBN;
@@ -17,9 +17,9 @@ contract("ProjectManager contract uint tests", async accounts => {
 
   const rewardModels = [];
 
-  async function createFixtures(deployed = false){
+  async function prepareFixtures(deployed = false){
     const chance = new Chance();
-    const admin = chance.pickone(accounts);
+    const admin = (deployed) ? accounts[0] : chance.pickone(accounts);
     let prjMgr;
     
     if(deployed){
@@ -48,7 +48,7 @@ contract("ProjectManager contract uint tests", async accounts => {
     }
 
     rewardModels.push(await ProportionalRewardModel.deployed());
-    rewardModels.push(await Top2RewardedModel.deployed());
+    rewardModels.push(await EvenVoterRewardModel.deployed());
     rewardModels.push(await WinnerTakesAllModel.deployed());
 
     console.debug(`The number of accounts : ${accounts.length}`);
@@ -56,20 +56,20 @@ contract("ProjectManager contract uint tests", async accounts => {
   });
   
   
-  it("Should have no project or reward model initially.", async() => {
-    const [chance, admin, prjMgr] = await createFixtures(true);
+  it("Should have no project and a few reward models initially.", async() => {
+    const [chance, admin, prjMgr] = await prepareFixtures(true);
     
     const cnt1 = await prjMgr.getNumberOfProjects();
     const cnt2 = await prjMgr.getNumberOfRewardModels();
     
     assert.isTrue(cnt1.isZero(), "Initially there should be no project in a project manager contract.");
-    assert.isTrue(cnt2.isZero(), "Initially there should be no reward model in a project manager contract.");
+    assert.isTrue(cnt2.gtn(0), "Initially there should be no reward model in a project manager contract.");
   });
   
   
   it("Can count the number of created projects", async() => {
 
-    const [chance, admin, prjMgr] = await createFixtures(true);
+    const [chance, admin, prjMgr] = await prepareFixtures(true);
     //await registerRewardModels(prjMgr, rewardModels, admin);
     
     const n = chance.natural({min: 3, max: 10});
@@ -92,7 +92,7 @@ contract("ProjectManager contract uint tests", async accounts => {
   });
   
   it("Can register reward models", async() => {
-    const [chance, admin, prjMgr] = await createFixtures(true);
+    const [chance, admin, prjMgr] = await prepareFixtures(true);
     const addrs = [], names = [];
     
     for(const model of rewardModels){

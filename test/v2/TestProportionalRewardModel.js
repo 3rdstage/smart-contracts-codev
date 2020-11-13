@@ -19,7 +19,7 @@ contract("ProportionalRewardModel contract uint tests", async accounts => {
   async function createFixtures(deployed = false){
  
     const chance = new Chance();
-    const admin = chance.pickone(accounts);
+    const admin = (deployed) ? accounts[0] : chance.pickone(accounts);
     const rwdModel = (deployed) ?
       await ProportionalRewardModel.deployed() : await ProportionalRewardModel.new(15, 10, {from: admin});
 
@@ -42,7 +42,7 @@ contract("ProportionalRewardModel contract uint tests", async accounts => {
     let balance = 0;
 
     for(const acct of accounts){
-        await web3.eth.personal.unlockAccount(acct);
+        //await web3.eth.personal.unlockAccount(acct);
         await accts.push([acct, await web3.eth.getBalance(acct)]);
     }
 
