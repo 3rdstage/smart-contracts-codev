@@ -1,12 +1,10 @@
 const IRewardModel = artifacts.require("IRewardModelL");
 const ProportionalRewardModel = artifacts.require("ProportionalRewardModelL");
-const Top2RewardedModel = artifacts.require("Top2RewardedModelL");
-const WinnerTakesAllModel = artifacts.require("WinnerTakesAllModelL");
 const Chance = require('chance');
 const toBN = web3.utils.toBN;
 const { constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
-contract("ProportionalRewardModel contract uint tests", async accounts => {
+contract("'ProportionalRewardModel' contract uint tests", async accounts => {
   
   'use strict';
 
@@ -16,12 +14,12 @@ contract("ProportionalRewardModel contract uint tests", async accounts => {
   const votees = []; // fill in the `before` function
   const voters = []; // fill in the `before` function
 
-  async function createFixtures(deployed = false){
+  async function prepareFixtures(deployed = true){
  
     const chance = new Chance();
     const admin = (deployed) ? accounts[0] : chance.pickone(accounts);
     const rwdModel = (deployed) ?
-      await ProportionalRewardModel.deployed() : await ProportionalRewardModel.new(15, 10, {from: admin});
+        await ProportionalRewardModel.deployed() : await ProportionalRewardModel.new(15, 10, {from: admin});
 
     return [chance, admin, rwdModel];
   }
@@ -55,7 +53,7 @@ contract("ProportionalRewardModel contract uint tests", async accounts => {
   
   it("Can calculate the contest scenario", async() => {
     
-    const [chance, admin, rwdModel] = await createFixtures(true);
+    const [chance, admin, rwdModel] = await prepareFixtures(true);
     const rwdPot = {total: toBN(1E20).toString(), contribsPercent: 70};
 
     const vts = [];           // votes
@@ -95,7 +93,7 @@ contract("ProportionalRewardModel contract uint tests", async accounts => {
 
   it("Can calculate a scenario where 2 votees have same score.", async() => {
     
-    const [chance, admin, rwdModel] = await createFixtures(true);
+    const [chance, admin, rwdModel] = await prepareFixtures(true);
     const rwdPot = {total: toBN(1E20).toString(), contribsPercent: 70};
 
     const vts = [];           // votes
@@ -130,7 +128,7 @@ contract("ProportionalRewardModel contract uint tests", async accounts => {
 
   it("Can calculate a scenario where only one votee among 2 votees won all votes", async() => {
     
-    const [chance, admin, rwdModel] = await createFixtures(true);
+    const [chance, admin, rwdModel] = await prepareFixtures(true);
     const rwdPot = {total: toBN(1E20).toString(), contribsPercent: 70};
 
     const vts = [];           // votes
@@ -165,7 +163,7 @@ contract("ProportionalRewardModel contract uint tests", async accounts => {
 
   it("Can calculate a scenario where all 3 votees have different scores.", async() => {
     
-    const [chance, admin, rwdModel] = await createFixtures(true);
+    const [chance, admin, rwdModel] = await prepareFixtures(true);
     const rwdPot = {total: toBN(1E20).toString(), contribsPercent: 70};
 
     const vts = [];           // votes

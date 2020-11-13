@@ -7,7 +7,7 @@ const Chance = require('chance');
 const toBN = web3.utils.toBN;
 const { constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
-contract("Project contract uint tests", async accounts => {
+contract("'Project' contract uint tests", async accounts => {
   
   'use strict';
 

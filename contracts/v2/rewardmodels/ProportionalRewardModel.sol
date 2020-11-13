@@ -26,7 +26,6 @@ contract ProportionalRewardModelL is IRewardModelL{
         
         voterHighPortion = _vtrHighPort;
         voterBasePortion = _vtrBasePort;
-        
     }
 
     function calcRewards(RewardPot calldata _rewardPot, Vote[] calldata _votes, Score[] calldata _scores) 

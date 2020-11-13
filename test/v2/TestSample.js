@@ -4,7 +4,7 @@ const Chance = require('chance');
 const toBN = web3.utils.toBN;
 const { constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
-contract("Sample contract uint tests", async accounts => {
+contract("'Sample' contract uint tests", async accounts => {
   
   'use strict';
 
@@ -14,7 +14,7 @@ contract("Sample contract uint tests", async accounts => {
   const votees = []; // fill in the `before` function
   const voters = []; // fill in the `before` function
 
-  async function createFixtures(){
+  async function prepareFixtures(){
  
     const chance = new Chance();
     const admin = chance.pickone(accounts);
@@ -49,7 +49,7 @@ contract("Sample contract uint tests", async accounts => {
   });
   
   it("Can return struct array", async() => {
-    const [chance, admin, sampleContr] = await createFixtures();
+    const [chance, admin, sampleContr] = await prepareFixtures();
     
     const ver = chance.pickone(voters);
     const vee = chance.pickone(votees);
@@ -68,7 +68,7 @@ contract("Sample contract uint tests", async accounts => {
   });
   
   it("Can accept strut array parameter", async() => {
-    const [chance, admin, sampleContr] = await createFixtures();
+    const [chance, admin, sampleContr] = await prepareFixtures();
 
     const amt = 30000000000;
     const vts = [];
@@ -83,7 +83,7 @@ contract("Sample contract uint tests", async accounts => {
   });
   
   it("Can deliver struct array param to another contract.", async() => {
-    const [chance, admin, sampleContr] = await createFixtures();
+    const [chance, admin, sampleContr] = await prepareFixtures();
 
     const ttl = toBN(2E18);
     const amt = 30000000000;
@@ -99,7 +99,7 @@ contract("Sample contract uint tests", async accounts => {
   
   it("Can accept struct parameters", async() => {
     
-    const [chance, admin, sampleContr] = await createFixtures();
+    const [chance, admin, sampleContr] = await prepareFixtures();
   
     const ttl = toBN(1E20);    // total
     const prct = 70;           // percent
@@ -118,7 +118,7 @@ contract("Sample contract uint tests", async accounts => {
   
   
   it("Can calculate rewards.", async() => {
-    const [chance, admin, sampleContr] = await createFixtures();
+    const [chance, admin, sampleContr] = await prepareFixtures();
     
     const rwdPot = {total: toBN(1E20).toString(), contribsPercent: 70};
 
@@ -149,7 +149,7 @@ contract("Sample contract uint tests", async accounts => {
   });
   
   it("Can handle local uint256 array.", async() => {
-    const [chance, admin, sampleContr] = await createFixtures();
+    const [chance, admin, sampleContr] = await prepareFixtures();
     
     const sz = 10;
     const fills = 5;
@@ -161,7 +161,7 @@ contract("Sample contract uint tests", async accounts => {
   
   
   it("Can handle local address array.", async() => {
-    const [chance, admin, sampleContr] = await createFixtures();
+    const [chance, admin, sampleContr] = await prepareFixtures();
     
     const sz = 10;
     const fills = 5;
@@ -170,10 +170,10 @@ contract("Sample contract uint tests", async accounts => {
     
   });
   
-  it.skip("Events would not be emitted if the transaction is reverted.", async() => {
-    const [chance, admin, sampleContr] = await createFixtures();
+  it("Events would not be emitted if the transaction is reverted.", async() => {
+    const [chance, admin, sampleContr] = await prepareFixtures();
     
-    await expectRevert(sampleContr.testRevertAndEvent());
+    await expectRevert.unspecified(sampleContr.testRevertAndEvent());
   });
   
 
