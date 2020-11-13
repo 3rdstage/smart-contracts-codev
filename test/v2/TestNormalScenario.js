@@ -55,7 +55,6 @@ contract("Integrated test for normal scenario", async accounts => {
     let balance = 0;
 
     for(const acct of accounts){
-        await web3.eth.personal.unlockAccount(acct);
         await accts.push([acct, await web3.eth.getBalance(acct)]);
     }
 
@@ -67,8 +66,8 @@ contract("Integrated test for normal scenario", async accounts => {
   it("Can follow normal scenario", async() => {
     const chance = new Chance();
     const admin = accounts[0];
-    const contributors = [accounts[2], accounts[3], accounts[4]];
-    const voters = [accounts[5], accounts[6], accounts[7]];
+    const contributors = [accounts[3], accounts[4], accounts[5]];
+    const voters = [accounts[6], accounts[7], accounts[8]];
     const projects = []; // fill later
     const contribs = []; // fill later
     const votes = []; // fill later

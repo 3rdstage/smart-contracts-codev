@@ -8,8 +8,7 @@ import "../IRewardModel.sol";
 contract WinnerTakesAllModelL is IRewardModelL{
     
     string private constant name = "Winner-Takes-All reward model";
-    
-    
+
     function getName() external view override returns (string memory){
         return name;
     }

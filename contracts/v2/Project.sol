@@ -55,12 +55,11 @@ contract ProjectL is Ownable{
         require(!rewarded, "Project: Reward plan can't be changed after rewards are distributed. - This project has been rewareded already.");
         
         rewardPot = RewardPot(_total, _contribsPerct); 
+        emit RewardPotUpdated(id, _total, _contribsPerct);
     }
     
     function setRewardPot(uint256 _total, uint8 _contribsPerct) external onlyOwner{
         _setRewardPot(_total, _contribsPerct);
-
-        emit RewardPotUpdated(id, _total, _contribsPerct);
     }
     
     function getRewardPot() external view returns (uint256 total, uint8 contribsPerct){

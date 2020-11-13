@@ -15,7 +15,7 @@ const testKeys = config.match(/ethereum.keys.[0-9]*=.*/g).map(x => x.replace(/^e
 // https://web3js.readthedocs.io/en/v1.3.0/web3.html#configuration
 const prodHttpOptions = { 
   keepAlive: true,
-  timeout: 30000, // ms
+  timeout: 70000, // ms
   headers: [
     { 
       name: 'Authorization', 
@@ -23,6 +23,9 @@ const prodHttpOptions = {
      }
   ]
 };
+
+const testHttpOptions = { keepAlive: true, timeout: 70000 }
+
 
 // http://truffleframework.com/docs/advanced/configuration
 module.exports = {
@@ -39,7 +42,7 @@ module.exports = {
     development: {
       host: ganache.host,
       port: ganache.port,
-      network_id: ganache.net,
+      network_id: "*",
       gas: 4E7,
       gasPrice: 2E10,
     },
@@ -47,10 +50,12 @@ module.exports = {
     chainztest: {
       // https://github.com/trufflesuite/truffle-hdwallet-provider#private-keys
       // https://github.com/trufflesuite/truffle/issues/1022
-      provider: () => new HDWalletProvider(testKeys, "https://besutest.chainz.network/", 0, testKeys.length),
-      network_id: '2020',
-      gas: 1E7,
-      gasPrice: 0
+      provider: () => new HDWalletProvider(testKeys, new Web3HttpProvider("https://besutest.chainz.network/", testHttpOptions), 0, testKeys.length),
+      network_id: "*",
+      //gas: 200000000,
+      gasPrice: 0,
+      websockets: false,
+      skipDryRun: true
     },
 
     chainzprod: {
@@ -59,8 +64,10 @@ module.exports = {
       // https://github.com/trufflesuite/truffle/issues/1022
       provider: () => new HDWalletProvider(testKeys, new Web3HttpProvider("https://besu.chainz.network/", prodHttpOptions), 0, testKeys.length),
       network_id: '*',
-      gas: 1E7,
-      gasPrice: 0
+      //gas: 200000000,
+      gasPrice: 0,
+      websockets: false,
+      skipDryRun: true
     },
   },
 
@@ -83,7 +90,7 @@ module.exports = {
           enabled: false,
           runs: 200
         },
-        //evmVersion: "petersburg"
+        evmVersion: "constantinople"
       }
     },
   },

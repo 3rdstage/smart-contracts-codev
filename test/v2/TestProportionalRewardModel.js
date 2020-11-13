@@ -30,13 +30,13 @@ contract("ProportionalRewardModel contract uint tests", async accounts => {
   before(async() => {
     assert.isAtLeast(accounts.length, 8, "There should at least 8 accounts to run this test.");
 
-    votees.push(accounts[2]);
     votees.push(accounts[3]);
     votees.push(accounts[4]);
+    votees.push(accounts[5]);
 
-    voters.push(accounts[5]);
     voters.push(accounts[6]);
     voters.push(accounts[7]);
+    voters.push(accounts[8]);
 
     const accts = [];
     let balance = 0;

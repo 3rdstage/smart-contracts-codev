@@ -32,13 +32,13 @@ contract("Project contract uint tests", async accounts => {
     let balance = 0;
 
     for(const acct of accounts){
-        await web3.eth.personal.unlockAccount(acct);
+        //await web3.eth.personal.unlockAccount(acct);
         await accts.push([acct, await web3.eth.getBalance(acct)]);
     }
 
-    rewardModels.push(await ProportionalRewardModel.new(15, 10, {from: accounts[0]}));
-    rewardModels.push(await Top2RewardedModel.new({from: accounts[0]}));
-    rewardModels.push(await WinnerTakesAllModel.new({from: accounts[0]}));
+    rewardModels.push(await ProportionalRewardModel.deployed());
+    rewardModels.push(await Top2RewardedModel.deployed());
+    rewardModels.push(await WinnerTakesAllModel.deployed());
 
     console.debug(`The number of accounts : ${accounts.length}`);
     console.table(accts);

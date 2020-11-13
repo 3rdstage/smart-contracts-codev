@@ -43,13 +43,13 @@ contract("ProjectManager contract uint tests", async accounts => {
     let balance = 0;
 
     for(const acct of accounts){
-        await web3.eth.personal.unlockAccount(acct);
+        //await web3.eth.personal.unlockAccount(acct);
         await accts.push([acct, await web3.eth.getBalance(acct)]);
     }
 
-    rewardModels.push(await ProportionalRewardModel.new(15, 10, {from: accounts[0]}));
-    rewardModels.push(await Top2RewardedModel.new({from: accounts[0]}));
-    rewardModels.push(await WinnerTakesAllModel.new({from: accounts[0]}));
+    rewardModels.push(await ProportionalRewardModel.deployed());
+    rewardModels.push(await Top2RewardedModel.deployed());
+    rewardModels.push(await WinnerTakesAllModel.deployed());
 
     console.debug(`The number of accounts : ${accounts.length}`);
     console.table(accts);
@@ -57,7 +57,7 @@ contract("ProjectManager contract uint tests", async accounts => {
   
   
   it("Should have no project or reward model initially.", async() => {
-    const [chance, admin, prjMgr] = await createFixtures();
+    const [chance, admin, prjMgr] = await createFixtures(true);
     
     const cnt1 = await prjMgr.getNumberOfProjects();
     const cnt2 = await prjMgr.getNumberOfRewardModels();
@@ -69,8 +69,8 @@ contract("ProjectManager contract uint tests", async accounts => {
   
   it("Can count the number of created projects", async() => {
 
-    const [chance, admin, prjMgr] = await createFixtures();
-    await registerRewardModels(prjMgr, rewardModels, admin);
+    const [chance, admin, prjMgr] = await createFixtures(true);
+    //await registerRewardModels(prjMgr, rewardModels, admin);
     
     const n = chance.natural({min: 3, max: 10});
     const epc = Date.now();
@@ -92,7 +92,7 @@ contract("ProjectManager contract uint tests", async accounts => {
   });
   
   it("Can register reward models", async() => {
-    const [chance, admin, prjMgr] = await createFixtures();
+    const [chance, admin, prjMgr] = await createFixtures(true);
     const addrs = [], names = [];
     
     for(const model of rewardModels){

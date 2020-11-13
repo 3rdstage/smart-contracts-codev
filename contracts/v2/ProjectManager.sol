@@ -40,6 +40,10 @@ contract ProjectManagerL is Context, AccessControl{
     VotesL private votesContract;                      // votes contract
 
     event ProjectCreated(uint256 indexed id, address addr, uint256 totalReward, uint8 contirbPercent, address rewardModelAddr);
+    
+    event RewardModelRegistered(address indexed addr);
+    
+    event TokenCollected(address indexed from, uint256 amount);
 
     modifier onlyAdmin() {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Aadmin role is required to do this");
@@ -105,19 +109,31 @@ contract ProjectManagerL is Context, AccessControl{
         
         return projects.get(_prjId);
     }
-
-    function registerRewardModel(address _modelAddr) public onlyAdmin{
-        // Expecting that reward models would not so many, at most tens of models.
+    
+    function registerRewardModels(address[] memory _modelAddrs) external onlyAdmin{
+        uint256 l = _modelAddrs.length;
         
+        for(uint256 i = 0; i < l; i++){
+            _registerRewardModel(_modelAddrs[i]);
+        }
+    }
+
+    function registerRewardModel(address _modelAddr) external onlyAdmin{
+        _registerRewardModel(_modelAddr);
+    } 
+    
+    function _registerRewardModel(address _modelAddr) internal{
         require(_modelAddr != address(0), "ProjectManager: Zero address can't be reward model.");
-        require(!rewardModelAddrs.contains(_modelAddr), "ProjectManager: The reward model at the specified address was registered already.");
+        // allow re-register
+        //require(!rewardModelAddrs.contains(_modelAddr), "ProjectManager: The reward model at the specified address was registered already.");
         
         IRewardModelL mdl = IRewardModelL(_modelAddr);
         string memory nm = mdl.getName();
         
         rewardModels[_modelAddr] = nm;
         rewardModelAddrs.add(_modelAddr);
-    } 
+        emit RewardModelRegistered(_modelAddr);
+    }
     
     function getNumberOfRewardModels() public view returns (uint256){
         return rewardModelAddrs.length();
@@ -136,7 +152,7 @@ contract ProjectManagerL is Context, AccessControl{
         return ProjectL(projects.get(_prjId));
     }
 
-    function _setProjectRewarded(uint256 _prjId) internal onlyAdmin{
+    function _setProjectRewarded(uint256 _prjId) internal{
         ProjectL prj = _findProject(_prjId);
         prj.setRewarded();
     }
@@ -167,6 +183,7 @@ contract ProjectManagerL is Context, AccessControl{
         
         // approve as much token to votes contract, in case of unvote or update vote
         token.approve(address(votesContract), _amt);
+        emit TokenCollected(_owner, _amt);
     }
     
     function simulateRewards(uint256 _prjId) external view returns(Reward[] memory voterRewards, Reward[] memory voteeRewards, uint256 remainder){

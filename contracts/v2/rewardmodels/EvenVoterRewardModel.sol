@@ -25,10 +25,10 @@ contract EvenVoterRewardModelL is ProportionalRewardModelL(1, 1){
         remainder = _rewardPot.total;
     }
     
-    function _calcVoterReward(uint256 _totalAmt, Vote[] calldata _votes) 
-        internal virtual view returns(Reward[] memory voteeRewards){
-    
-    }
+//    function _calcVoterReward(uint256 _totalAmt, Vote[] calldata _votes) 
+//        internal virtual view returns(Reward[] memory voteeRewards){
+//    
+//    }
         
 
     
