@@ -27,7 +27,7 @@ contract ProjectManagerL is Context, AccessControl{
 //        Rewarded            // rewards are distributed to contributors and voters
 //    }
     
-    Counters.Counter private projectCnter;
+    //Counters.Counter private projectCnter;           // become unused : internal generated ID -> external IDß
     
     RegularERC20TokenL private token;                  // token contract for reward
     
@@ -161,6 +161,13 @@ contract ProjectManagerL is Context, AccessControl{
         
         prj.assignVoters(_voters);
     }
+    
+    function getProjectVoters(uint256 _prjId) external view returns(address[] memory){
+        ProjectL prj = _findProject(_prjId);
+        
+        return prj.getVoters();
+    }
+    
     
     /**
      * Try to collect token (send token to me from owner) using `transferFrom` function.

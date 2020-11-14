@@ -40,8 +40,8 @@ contract("'Project' contract uint tests", async accounts => {
     rewardModels.push(await EvenVoterRewardModel.deployed());
     rewardModels.push(await WinnerTakesAllModel.deployed());
 
-    console.debug(`The number of accounts : ${accounts.length}`);
-    console.table(accts);
+    //console.debug(`The number of accounts : ${accounts.length}`);
+    //console.table(accts);
   });
   
   

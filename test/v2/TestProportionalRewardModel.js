@@ -28,26 +28,20 @@ contract("'ProportionalRewardModel' contract uint tests", async accounts => {
   before(async() => {
     assert.isAtLeast(accounts.length, 8, "There should at least 8 accounts to run this test.");
 
-    votees.push(accounts[3]);
-    votees.push(accounts[4]);
-    votees.push(accounts[5]);
-
-    voters.push(accounts[6]);
-    voters.push(accounts[7]);
-    voters.push(accounts[8]);
+    votees.push(accounts[3], accounts[4], accounts[5]);
+    voters.push(accounts[6], accounts[7], accounts[8]);
 
     const accts = [];
     let balance = 0;
-
     for(const acct of accounts){
         //await web3.eth.personal.unlockAccount(acct);
         await accts.push([acct, await web3.eth.getBalance(acct)]);
     }
 
-    console.debug(`Votees : ${votees.length}`);
-    console.table(votees);
-    console.debug(`Voters : ${voters.length}`);
-    console.table(voters);
+    //console.debug(`Votees : ${votees.length}`);
+    //console.table(votees);
+    //console.debug(`Voters : ${voters.length}`);
+    //console.table(voters);
     
   });
   
@@ -66,7 +60,6 @@ contract("'ProportionalRewardModel' contract uint tests", async accounts => {
     scrs.push({owner: votees[1], value: toBN(4E18).toString()});
     
     const rslt = await rwdModel.calcRewards(rwdPot, vts, scrs);
-    console.log(rslt);
     
     assert.equal(scrs.length, rslt.voteeRewards.length);
     assert.equal(vts.length, rslt.voterRewards.length);
@@ -106,7 +99,6 @@ contract("'ProportionalRewardModel' contract uint tests", async accounts => {
     scrs.push({owner: votees[1], value: toBN(6E18).toString()});
     
     const rslt = await rwdModel.calcRewards(rwdPot, vts, scrs);
-    console.log(rslt);
     
     assert.equal(scrs.length, rslt.voteeRewards.length);
     assert.equal(vts.length, rslt.voterRewards.length);
@@ -141,7 +133,6 @@ contract("'ProportionalRewardModel' contract uint tests", async accounts => {
     scrs.push({owner: votees[1], value: toBN(0).toString()});
     
     const rslt = await rwdModel.calcRewards(rwdPot, vts, scrs);
-    console.log(rslt);
     
     assert.equal(scrs.length, rslt.voteeRewards.length);
     assert.equal(vts.length, rslt.voterRewards.length);
@@ -177,7 +168,6 @@ contract("'ProportionalRewardModel' contract uint tests", async accounts => {
     scrs.push({owner: votees[2], value: toBN(3E18).toString()});
     
     const rslt = await rwdModel.calcRewards(rwdPot, vts, scrs);
-    console.log(rslt);
     
     assert.equal(scrs.length, rslt.voteeRewards.length);
     assert.equal(vts.length, rslt.voterRewards.length);

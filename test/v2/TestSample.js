@@ -4,7 +4,7 @@ const Chance = require('chance');
 const toBN = web3.utils.toBN;
 const { constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
-contract("'Sample' contract uint tests", async accounts => {
+contract.skip("'Sample' contract uint tests", async accounts => {
   
   'use strict';
 
@@ -26,13 +26,8 @@ contract("'Sample' contract uint tests", async accounts => {
   before(async() => {
     assert.isAtLeast(accounts.length, 8, "There should at least 8 accounts to run this test.");
 
-    votees.push(accounts[3]);
-    votees.push(accounts[4]);
-    votees.push(accounts[5]);
-
-    voters.push(accounts[6]);
-    voters.push(accounts[7]);
-    voters.push(accounts[8]);
+    votees.push(accounts[3], accounts[4], accounts[5]);
+    voters.push(accounts[6], accounts[7], accounts[8]);
 
     const accts = [];
     let balance = 0;

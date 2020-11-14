@@ -39,30 +39,23 @@ contract("'Contribution' contract uint tests", async accounts => {
   before(async() => {
     assert.isAtLeast(accounts.length, 8, "There should at least 8 accounts to run this test.");
     
-    votees.push(accounts[3]);
-    votees.push(accounts[4]);
-    votees.push(accounts[5]);
-    voters.push(accounts[6]);
-    voters.push(accounts[7]);
-    voters.push(accounts[8]);
+    votees.push(accounts[3], accounts[4], accounts[5]);
+    voters.push(accounts[6], accounts[7], accounts[8]);
 
     const accts = [];
     let balance = 0;
-
     for(const acct of accounts){
         await accts.push([acct, await web3.eth.getBalance(acct)]);
     }
 
-    console.debug(`The number of accounts : ${accounts.length}`);
-    console.table(accts);
+    //console.debug(`The number of accounts : ${accounts.length}`);
+    //console.table(accts);
   });
   
-  it("Can create project.", async() => {
+  it("Can register contributions", async() => {
+
     const [chance, admin, prjMgrContr, contribsContr] = await prepareFixtures(true);
-    
     const rwdMdl = await prjMgrContr.getRewardModel(0);    
-    
-    console.log(rwdMdl);          
     
     const prj = { id: Date.now().toString().substring(3),
                   name: 'p1', totalReward: toBN(1E20), totalRewardStr: '1E20',
@@ -70,7 +63,6 @@ contract("'Contribution' contract uint tests", async accounts => {
     
     const rcpt = await prjMgrContr.createProject(prj.id, prj.name, prj.totalReward, 
         prj.contribPrct, prj.rewardModelAddr, {from: admin});
-    console.log(rcpt);
     expectEvent(rcpt, 'ProjectCreated');
     const ev = rcpt.logs[0].args;
   });
