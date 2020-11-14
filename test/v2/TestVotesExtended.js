@@ -6,7 +6,7 @@ const Chance = require('chance');
 const toBN = web3.utils.toBN;
 const { constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
-contract("'Votes' contract uint tests suite 1", async accounts => {
+contract("'Votes' contract uint tests suite 2", async accounts => {
   
   'use strict';
 
@@ -60,7 +60,7 @@ contract("'Votes' contract uint tests suite 1", async accounts => {
     //await getAndPrintBalances(`Initiall Token Balances`)
   });
   
-  it.skip("Can vote", async() => {
+  it.skip("Can vote again or unvote.", async() => {
     
     const bals0 = await getAndPrintBalances(`Token Balances before Vote`);
     
@@ -105,8 +105,6 @@ contract("'Votes' contract uint tests suite 1", async accounts => {
       cntrbs.push({project: prj.id, title: `Contrib ${i}`, 
           owner: votees[i].name, ownerAddr: votees[i].addr});
     }
-    //cntrbs.push({project: prj.id, ownerAddr: votees[0].addr, title: "Contrib 1"});
-    //cntrbs.push({project: prj.id, owner: votees[1].addr, title: "Contrib 2"});
     
     // Add 2 contributions to the project
     for(const cntrb of cntrbs){
