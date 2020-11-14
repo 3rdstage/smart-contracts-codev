@@ -9,7 +9,7 @@ import "../IRewardModel.sol";
 
 contract ProportionalRewardModelL is IRewardModelL{
     using SafeMath for uint256;
-    using EnumerableSet for EnumerableSet.AddressSet;
+    //using EnumerableSet for EnumerableSet.AddressSet;
     
     string private constant name = "Proportionally rewarded model";
     
@@ -33,28 +33,17 @@ contract ProportionalRewardModelL is IRewardModelL{
         
         require(_scores.length > 0, "ProportionalRewardModel: The specified votee scores are empty.");
         require(_votes.length > 0, "ProportionalRewardModel: The speified votes are empty.");
-        
-        uint256 ttl = _rewardPot.total;
-        uint8 cntrbsPrct = _rewardPot.contribsPercent;
-        require(ttl > 0, "ProportionalRewardModel: The specified total reward is ZERO.");
-        require(cntrbsPrct > 0 && cntrbsPrct < 100, "ProportionalRewardModel: The percentage for contributors should be between 0 and 100 exclusively.");
+        require(_rewardPot.total > 0, "ProportionalRewardModel: The specified total reward is ZERO.");
+        require(_rewardPot.contribsPercent > 0 && _rewardPot.contribsPercent < 100, "ProportionalRewardModel: The percentage for contributors should be between 0 and 100 exclusively.");
 
         // calculate votees' rewards first based on scores
-        uint256 l = _scores.length;                        // number of votees
-        uint256 vteeTotal = ttl.mul(cntrbsPrct).div(100);  // total reward amount for votees
-        voteeRewards = new Reward[](l);                    // 1st output parameter
-        {                                                  // block to avoid 'stack too deep'
-            uint256 scrSum = 0;                            // sum of votee scores
-            for(uint256 i = 0; i < l; i++) scrSum = scrSum.add(_scores[i].value);
-        
-            for(uint256 i = 0; i < l; i++){
-                voteeRewards[i] = Reward(_scores[i].owner, vteeTotal.mul(_scores[i].value).div(scrSum));     
-            }
-        }
+        uint256 vteeTotal = _rewardPot.total.mul(_rewardPot.contribsPercent).div(100);  // total reward amount for votees
+        voteeRewards = _calcVoteeRewards(vteeTotal, _scores);
 
         // select top ranker(s) 
-        address[] memory topVtees = new address[](l);  // top scored votees - tie is possiblee
+        address[] memory topVtees = new address[](_scores.length);  // top scored votees - tie is possiblee
         {                                        // block to avoid 'stack too deep'
+            uint256 l = _scores.length;          // number of votees
             uint256 topScr = 0;                  // top score
             uint256 curScr;                      // current score under iteration
             uint256 cnt = 0;                     // tie top ranker count
@@ -73,31 +62,39 @@ contract ProportionalRewardModelL is IRewardModelL{
             address[] memory topVtees2 = new address[](cnt);
             for(uint256 i = 0; i < cnt; i++) topVtees2[i] = topVtees[i];
             topVtees = topVtees2;
-
             assert(topVtees.length > 0);         // should be guaranteed internally
         }
 
-        uint256 vterTotal = ttl.sub(vteeTotal);  // total reward amount for voters
-        Vote[] memory vts = _votes;              // local copy to avoid 'stack too deep'
-        
         // calc voters' rewards
-        voterRewards = _calcVoterRewards(vterTotal, topVtees, vts);
+        //Vote[] memory vts = _votes;              // local copy to avoid 'stack too deep'
+        voterRewards = _calcVoterRewards(_rewardPot.total.sub(vteeTotal), topVtees, _votes);
         
         // calc remainder
-        remainder = _calcRemainder(ttl, voteeRewards, voterRewards);
+        remainder = _calcRemainder(_rewardPot.total, voteeRewards, voterRewards);
     }
     
-    
-    function _calcVoterRewards(uint256 _totalAmt, address[] memory _topVotees, Vote[] memory _votes) 
-        internal virtual view returns(Reward[] memory voteeRewards){   // `view` visibility for derived contracts
+    function _calcVoteeRewards(uint256 _totalAmt, Score[] calldata _scores) internal pure virtual returns(Reward[] memory rewards){
         
-        uint256 k = _topVotees.length;               // number of top ranked votees
-        require(k > 0, "ProportionalRewardModel: Top ranked votees should be at least one.");
+        uint256 l = _scores.length;
+        rewards = new Reward[](l);     // output parameter
+        uint256 scrSum = 0;            // sum of votee scores
+        for(uint256 i = 0; i < l; i++) scrSum = scrSum.add(_scores[i].value);
+        for(uint256 i = 0; i < l; i++){
+            rewards[i] = Reward(_scores[i].owner, _totalAmt.mul(_scores[i].value).div(scrSum));     
+        }
+    }
+
+    function _calcVoterRewards(uint256 _totalAmt, address[] memory _topVotees, Vote[] calldata _votes) 
+        internal view virtual returns(Reward[] memory rewards){   // `view` visibility for derived contracts
         
-        // determine voters' portions - voted to top ranker(s) : 15, otherwise : 10
+        require(_topVotees.length > 0, "ProportionalRewardModel: Top ranked votees should be at least one.");
+        
+        // determine voters' portions - voted to top ranker(s) : high portion, otherwise : base portion
         uint256 m = _votes.length;                     // number of voters
         uint256[] memory vtrPrts = new uint256[](m);   // voter portions - indexed by the position in `_votes` param
+        uint256 totalWghts = 0;                        // sum of voters' weights (portion x vote amount)
         {                                              // block to avoid 'stack too deep'
+            uint256 k = _topVotees.length;    
             address curVtee;                           // current votee address under iteration
             for(uint256 i = 0; i < m; i++){
                 vtrPrts[i] = voterBasePortion;         // set base portion first
@@ -108,20 +105,16 @@ contract ProportionalRewardModelL is IRewardModelL{
                         break;
                     }
                 }
-            }        
+                totalWghts = totalWghts.add(vtrPrts[i].mul(_votes[i].amount));
+            }
         }
-        
-        uint256 totalWghts = 0;    // sum of voters' weights (portion x vote amount)
-        for(uint256 i = 0; i < m; i++){
-            totalWghts = totalWghts.add(vtrPrts[i].mul(_votes[i].amount));
-        }
-        
-        voteeRewards = new Reward[](m);
+
+        rewards = new Reward[](m);
         uint256 amt;                // reward amount for each voter under iteration
         // fianlly calculate rewards for all voters
         for(uint256 i = 0; i < m; i++){
             amt = _totalAmt.mul(_votes[i].amount).mul(vtrPrts[i]).div(totalWghts);
-            voteeRewards[i] = Reward(_votes[i].voter, amt);
+            rewards[i] = Reward(_votes[i].voter, amt);
         }
     }
     
