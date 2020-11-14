@@ -66,13 +66,13 @@ contract ProjectManagerL is Context, AccessControl{
         return address(token);
     }
 
-    function setVotesContact(address _addr) public onlyAdmin{
+    function setVotesContact(address _addr) external onlyAdmin{
         require(_addr != address(0), "ProjectManager: Votes contract can't be ZERO address");
         
         votesContract = VotesL(_addr);
     }
 
-    function createProject(uint256 _id, string memory _name, uint256 _totalReward, uint8 _contribsPerct, address _rewardModelAddr) public onlyAdmin{
+    function createProject(uint256 _id, string memory _name, uint256 _totalReward, uint8 _contribsPerct, address _rewardModelAddr) external onlyAdmin{
         _createProject(_id, _name, _totalReward, _contribsPerct, _rewardModelAddr);    
     }
     
@@ -87,17 +87,17 @@ contract ProjectManagerL is Context, AccessControl{
         emit ProjectCreated(_id, addr, _totalReward, _contribsPerct, _rewardModelAddr);        
     }
 
-    function getNumberOfProjects() public view returns (uint256){
+    function getNumberOfProjects() external view returns (uint256){
         return projects.length();
     }
     
     //@TODO getProjectIds - getting IDs of all projects
     
-    function hasProject(uint256 _prjId) public view returns (bool){
+    function hasProject(uint256 _prjId) external view returns (bool){
         return projects.contains(_prjId);
     }
     
-    function getProjectAddress(uint256 _prjId) public view returns (address){
+    function getProjectAddress(uint256 _prjId) external view returns (address){
         require(projects.contains(_prjId), "ProjectManager: There's no project with the specified project ID.");
         
         return projects.get(_prjId);
@@ -128,11 +128,11 @@ contract ProjectManagerL is Context, AccessControl{
         emit RewardModelRegistered(_modelAddr);
     }
     
-    function getNumberOfRewardModels() public view returns (uint256){
+    function getNumberOfRewardModels() external view returns (uint256){
         return rewardModelAddrs.length();
     }
     
-    function getRewardModel(uint256 _index) public view returns (address addr, string memory name){
+    function getRewardModel(uint256 _index) external view returns (address addr, string memory name){
         require(_index < rewardModelAddrs.length(), "ProjectManager: Index is too large." );
         
         addr = rewardModelAddrs.at(_index);
@@ -177,7 +177,7 @@ contract ProjectManagerL is Context, AccessControl{
      * After collecting token from a voter, as much token is approved to votes contract, 
      * in case of unvote or update vote from the same voter
      */
-    function collectFrom(address _owner, uint256 _amt) public{
+    function collectFrom(address _owner, uint256 _amt) external{
         // collect token from voter
         token.transferFrom(_owner, address(this), _amt);
         
@@ -186,7 +186,38 @@ contract ProjectManagerL is Context, AccessControl{
         emit TokenCollected(_owner, _amt);
     }
     
-    function simulateRewards(uint256 _prjId) public view returns(Reward[] memory voterRewards, Reward[] memory voteeRewards, uint256 remainder){
+    
+    function simulateRewards(uint256 _prjId) external view returns(Reward[] memory voteeRewards, Reward[] memory voterRewards, uint256 remainder){
+        return _simulateRewards(_prjId);
+    }
+    
+    function simulateRewardsArrayRetuns(uint256 _prjId) external view 
+            returns(address[] memory votees, uint256[] memory voteeRewards, address[] memory voters, uint256[] memory voterRewards, uint256 remainder){
+        
+        (Reward[] memory vteeRwds, Reward[] memory vterRwds, uint256 rmnd) = _simulateRewards(_prjId);
+        
+        uint256 l = vteeRwds.length;
+        votees = new address[](l);
+        voteeRewards = new uint256[](l);
+        for(uint256 i = 0; i < l; i++){
+            votees[i] = vteeRwds[i].to;
+            voteeRewards[i] = vteeRwds[i].amount;
+        }
+        
+        uint256 m = vterRwds.length;
+        voters = new address[](m);
+        voterRewards = new uint256[](m);
+        for(uint256 i = 0; i < m; i++){
+            voters[i] = vterRwds[i].to;
+            voterRewards[i] = vterRwds[i].amount;
+        }
+        
+        remainder = rmnd;
+    }    
+        
+    
+    function _simulateRewards(uint256 _prjId) internal view 
+            returns(Reward[] memory voteeRewards, Reward[] memory voterRewards, uint256 remainder){
         ProjectL prj = _findProject(_prjId);
         
         IRewardModelL mdl = IRewardModelL(prj.getRewardModelAddress());
@@ -198,21 +229,6 @@ contract ProjectManagerL is Context, AccessControl{
         (uint256 ttl, uint8 prct) = prj.getRewardPot();
         RewardPot memory scl = RewardPot(ttl, prct);
         return mdl.calcRewards(scl, vts, scrs);
-    }
-    
-    function simulateVoterRewards(uint256 _prjId) public view returns(Reward[] memory voterRewards){
-        ProjectL prj = _findProject(_prjId);
-        
-        IRewardModelL mdl = IRewardModelL(prj.getRewardModelAddress());
-        Vote[] memory vts = votesContract.getVotesByProject(_prjId);
-        Score[] memory scrs = votesContract.getScoresByProject(_prjId);
-        
-        require(vts.length > 0, "ProjectManager: There's no votes yet for the specified project.");
-        
-        (uint256 ttl, uint8 prct) = prj.getRewardPot();
-        RewardPot memory scl = RewardPot(ttl, prct);
-        (, Reward[] memory voterRwds, ) = mdl.calcRewards(scl, vts, scrs);
-        voterRewards = voterRwds;
     }
 
     function distrubteRewards(uint256 _prjId) public onlyAdmin{
