@@ -61,7 +61,8 @@ contract("'Votes' contract uint tests suite 1", async accounts => {
       voters.push({no: i, name: `voter.${i}`, addr: accounts[6 + i], balance: 0, esv: ''});
     }
     
-    //await getAndPrintBalances(`Initiall Token Balances`)
+    //Mint voters enough initially
+    for(const v of voters) await tokenContr.mint(v.addr, toBN(50E18), {from: admin});
   });
   
   async function tryVoteAndVerify(prj, vteeAddrs, vts, vtTitle, verbose = false){

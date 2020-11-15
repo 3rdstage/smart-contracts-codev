@@ -3,7 +3,7 @@ const ProjectManager = artifacts.require("ProjectManagerL");
 const Contributions = artifacts.require("ContributionsL");
 const Votes = artifacts.require("VotesL");
 const Chance = require('chance');
-const toBN = web3.utils.toBN;
+const [toBN, fromWei] = [web3.utils.toBN, web3.utils.fromWei];
 const { constants, expectEvent, expectRevert } = require('@openzeppelin/test-helpers');
 
 contract("Integrated test including vote, reward simulation and reward distribution.", async accounts => {
@@ -12,6 +12,9 @@ contract("Integrated test including vote, reward simulation and reward distribut
 
   // avoid too many accounts
   if(accounts.length > 10) accounts = accounts.slice(0, 10);
+  
+  const PROJECT_MANAGER = 'project manager';
+  const REMAINDER = 'remainder';
   
   let tokenContr, prjMgrContr, cntrbsContr, votesContr;
   
@@ -33,7 +36,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
     for(const v of votees) bals.push({no: v.no, name: v.name, addr: v.addr});
     for(const v of voters) bals.push({no: v.no, name: v.name, addr: v.addr});
     
-    bals.push({name: 'project manager', 
+    bals.push({name: PROJECT_MANAGER, 
                addr: prjMgrContr.address, 
                amount: await tokenContr.balanceOf(prjMgrContr.address)});
 
@@ -42,7 +45,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
     for(const bal of bals){
       bal.amount = await tokenContr.balanceOf(bal.addr);
       bal.wei = nf.format(bal.amount.toString());
-      bal.esv = web3.utils.fromWei(bal.amount);
+      bal.esv = fromWei(bal.amount);
     }    
 
     if(verbose){
@@ -79,6 +82,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
       console.warn(`${hr}\n###   ${vtTitle}   ###\n${hr}`);
     }
     
+    const ttlSpply0 = await tokenContr.totalSupply(); 
     const bals0 = await getAndPrintBalances(`Token Balances before Vote`, verbose);
     
     // Create a new project
@@ -86,7 +90,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
         prj.totalReward, prj.contribsPrct, prj.rewardMdlAddr, {from: admin});
     
     if(verbose){
-      prj.reward = formatter.format(web3.utils.fromWei(prj.totalReward));
+      prj.reward = formatter.format(fromWei(prj.totalReward));
       const prjs = [prj];
       console.log("\n[[ Project Created ]]");
       console.table(prjs, ['id', 'reward', 'contribsPrct']);
@@ -130,7 +134,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
       vt0.project = prj.id;
       vt0.votee = votees.find(e => e.addr == vt0.voteeAddr).name;
       vt0.voter = voters.find(e => e.addr == vt0.voterAddr).name;
-      vt0.esv = web3.utils.fromWei(vt0.amount);
+      vt0.esv = fromWei(vt0.amount);
     }
 
     if(verbose){
@@ -164,7 +168,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
     const vts2 = []; // queried votes
     for(const vt1 of vts1){
       vts2.push({project: prj.id, voter: voters.find(e => e.addr == vt1.voter).name, 
-          votee: votees.find(e => e.addr == vt1.votee).name, esv: web3.utils.fromWei(vt1.amount)});
+          votee: votees.find(e => e.addr == vt1.votee).name, esv: fromWei(vt1.amount)});
     }
     if(verbose){
       console.log("\n[[ Votes Queried (after cast) ]]");
@@ -173,8 +177,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
     
     const scrs2 = []
     for(const scr1 of scrs1){
-      scrs2.push({project: prj.id, votee: votees.find(e => e.addr == scr1.owner).name,
-          esv: web3.utils.fromWei(scr1.value)});
+      scrs2.push({project: prj.id, votee: votees.find(e => e.addr == scr1.owner).name, esv: fromWei(scr1.value)});
     }
     if(verbose){
       console.log("\n[[ Scores Queried ]]");
@@ -183,27 +186,25 @@ contract("Integrated test including vote, reward simulation and reward distribut
     
     // Get balances after votes
     const bals1 = await getAndPrintBalances('Balances after Vote', verbose);
-    console.log(bals1);
-    console.log(bals0);
     
-    // Verfiy balances
+    // Verfiy balances after votes
     for(const bal1 of bals1){
       // balance before vote
-      let amt = bals0.find(e => e.addr == bal1.addr).amount;  
+      let amt0 = bals0.find(e => e.addr == bal1.addr).amount; // previous balance
+      let amt1 = bal1.amount; // current balance
+      let dlt = toBN(0); 
       
-      if(votees.map(e => e.addr).includes(bal1.addr)){  
-        // for votee, balance is expected not to be changed
-        assert.isTrue(bal1.amount.eq(amt)); 
-      }else if(voters.mape.includes(bal1.addr)){
-        assert.isTrue(bal1.amount.sub(vts0.find(e => e.voterAddr == bal1.addr).amount).eq(amt));
-      }else if(bal1.name == 'project manager'){
+      if(vts0.find(e => e.voterAddr == bal1.addr)){ // voter
+        // voter balance(after vote)  = voter balance(before vote) - vote amount
+        dlt = vts0.find(e => e.voterAddr == bal1.addr).amount.neg();
+      }else if(bal1.name == PROJECT_MANAGER){
         // sum of votes amounts
-        let sm = vts0.reduce((acc, cur) => {return acc.add(cur.amount);}, toBN(0));
-        assert.isTrue(bal1.amount.eq(amt.add(sm)));
+        dlt = vts0.reduce((acc, cur) => {return acc.add(cur.amount);}, toBN(0));
       }
+      assert.isTrue(amt1.eq(amt0.add(dlt)));
+      if(verbose) console.log(`Balance after vote for '${bal1.name}' : ${fromWei(amt0)} ESV -> ${fromWei(amt1)} ESV (${dlt.isNeg()?'':'+'}${fromWei(dlt)})`);
     }
-    if(verbose) console.log("Balances after votes are verified. - Balances of only voters and project manager has changes.");
-    
+    if(verbose) console.log("Balances after votes are all verified. - Balances of only voters and project manager has changes.");
     
     const rslt = await prjMgrContr.simulateRewardsArrayRetuns(prj.id);
     const rwds = [];
@@ -211,21 +212,18 @@ contract("Integrated test including vote, reward simulation and reward distribut
     let amt = 0;
     for(const [i, vtee] of rslt.votees.entries()){
       amt = rslt.voteeRewards[i];
-      rwds.push({name: votees.find(e => e.addr == vtee).name, addr: vtee, 
-        amt: amt, amount: formatter.format(amt), esv: web3.utils.fromWei(amt)});
+      rwds.push({name: votees.find(e => e.addr == vtee).name, addr: vtee, amt: amt, amount: formatter.format(amt), esv: fromWei(amt)});
     }
     for(const [i, vter] of rslt.voters.entries()){
       amt = rslt.voterRewards[i];
-      rwds.push({name: voters.find(e => e.addr == vter).name, addr: vter,
-        amt: amt, amount: formatter.format(amt), esv: web3.utils.fromWei(amt)});
+      rwds.push({name: voters.find(e => e.addr == vter).name, addr: vter, amt: amt, amount: formatter.format(amt), esv: fromWei(amt)});
     }
     rwds.sort(function(e1, e2){
       const n1 = e1.name, n2 = e2.name;
       if(n1 > n2){ return 1; }else if(n1 < n2){ return -1; }else{ return 0; }
     })
     
-    rwds.push({name: 'remainder', amt: toBN(rslt.remainder),
-        amount: formatter.format(rslt.remainder), esv: web3.utils.fromWei(rslt.remainder)});
+    rwds.push({name: REMAINDER, amt: toBN(rslt.remainder), amount: formatter.format(rslt.remainder), esv: fromWei(rslt.remainder)});
 
     if(verbose){
       console.log("\n[[ Rewards Simulated ]]");
@@ -237,32 +235,33 @@ contract("Integrated test including vote, reward simulation and reward distribut
     if(verbose) console.log("Distributing rewards.")    
     await prjMgrContr.distributeRewards(prj.id);
     
+    // Verify balances after rewards distribution
     const bals2 = await getAndPrintBalances("Balances after Reward Distribution", verbose);
-    
-    console.log(bals2);
-    console.log(bals1);
-    console.log(bals0);
-    
     for(const bal2 of bals2){
-      let bal1 = bals1.find(e => e.addr == bal2.addr); // balance aftrer vote
-    
-      let amt; // reward amount 
-      if(votees.includes(bal2.addr) || voters.includes(bal2.addr)){ // for votee or voter
-        amt = rwds.find(e => e.addr == bal2.addr).amt;
-        assert.isTrue(bal1.amount.add(amt).eq(bal2.amount));
-      }else{ // project manager
-        amt = rwds.find(e => e.name == 'remainder').amt;
-        console.log(amt);
-        console.log(bal1);
-        console.log(bal2);
-        assert.isTrue(bal1.amount.add(amt).eq(bal2.amount));
+      let amt1 = bals1.find(e => e.addr == bal2.addr).amount; // previous(aftrer vote but before rewarded) balance
+      let amt2 = bal2.amount; // current (after rewarded) balance
+      let dlt = toBN(0);            // delta, rewarded amount
+
+      if(vts0.find(e => (e.voterAddr == bal2.addr || e.voteeAddr == bal2.addr))){ // for votee or voter
+        dlt = rwds.find(e => e.addr == bal2.addr).amt;
+      }else if(bal2.name == PROJECT_MANAGER){ // project manager
+        dlt = rwds.find(e => e.name == REMAINDER).amt;
       }
+      
+      assert.isTrue(amt1.add(dlt).eq(amt2));
+      if(verbose) console.log(`Balance after rewards for '${bal2.name}' : ${fromWei(amt1)} ESV -> ${fromWei(amt2)} ESV (${dlt.isNeg()?'':'+'}${fromWei(dlt)})`);
     }
     if(verbose) console.log('Balances after rewards distribution are verified !!!');
+
+    const ttlSpply2 = await tokenContr.totalSupply();
+    assert.isTrue(ttlSpply0.add(prj.totalReward).eq(ttlSpply2));
+    if(verbose){
+      console.log(`Token total supply change : ${fromWei(ttlSpply0)} ESV -> ${fromWei(ttlSpply2)} ESV (+${fromWei(prj.totalReward)})`);
+      console.log(`${vtTitle} has been completed successfuly.\n`);
+    }
   }
   
-  
-  it.only("Can follow corretly the 1st scenario of which contest defined.", async() => {
+  it("Can follow corretly the 1st scenario of which contest defined.", async() => {
     
     const [chance, admin] = await prepareFixtures();
     const rwdMdl = await prjMgrContr.getRewardModel(0);
@@ -272,7 +271,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
       id: epc.toString().substring(5), 
       name: 'Prj 1', 
       totalReward: toBN(1E20),
-      totalRewardESV: web3.utils.fromWei(toBN(1E20)),
+      totalRewardESV: fromWei(toBN(1E20)),
       contribsPrct: 70,
       rewardMdlAddr: rwdMdl.addr
     }
@@ -317,7 +316,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
       id: epc.toString().substring(5), 
       name: 'Prj 2', 
       totalReward: toBN(1E20),
-      totalRewardESV: web3.utils.fromWei(toBN(1E20)),
+      totalRewardESV: fromWei(toBN(1E20)),
       contribsPrct: 70,
       rewardMdlAddr: rwdMdl.addr
     }
@@ -340,7 +339,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
       assert.equal(rwds.find(e => e.addr == voters[0].addr).esv, 7.5);
       assert.equal(rwds.find(e => e.addr == voters[1].addr).esv, 7.5);
       assert.equal(rwds.find(e => e.addr == voters[2].addr).esv, 15);
-      assert.equal(rwds.find(e => e.name == 'remainder').amount, 0);  // 0 remainer
+      assert.equal(rwds.find(e => e.name == REMAINDER).amount, 0);  // 0 remainer
       
       // verify total reward
       assert.approximately(rwds.reduce((acc, cur) => { return acc + Number.parseFloat(cur.esv); }, 0), 100, 0.01);
@@ -360,7 +359,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
       id: epc.toString().substring(5), 
       name: 'Prj 3', 
       totalReward: toBN(1E20),
-      totalRewardESV: web3.utils.fromWei(toBN(1E20)),
+      totalRewardESV: fromWei(toBN(1E20)),
       contribsPrct: 70,
       rewardMdlAddr: rwdMdl.addr
     }
@@ -383,7 +382,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
       assert.equal(rwds.find(e => e.addr == voters[0].addr).esv, 9);
       assert.equal(rwds.find(e => e.addr == voters[1].addr).esv, 9);
       assert.equal(rwds.find(e => e.addr == voters[2].addr).esv, 12);
-      assert.equal(rwds.find(e => e.name == 'remainder').amount, 0);  // 0 remainer
+      assert.equal(rwds.find(e => e.name == REMAINDER).amount, 0);  // 0 remainer
       
       // verify total reward
       assert.approximately(rwds.reduce((acc, cur) => { return acc + Number.parseFloat(cur.esv); }, 0), 100, 0.01);
@@ -404,7 +403,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
       id: epc.toString().substring(5), 
       name: 'Prj 4', 
       totalReward: toBN(1E20),
-      totalRewardESV: web3.utils.fromWei(toBN(1E20)),
+      totalRewardESV: fromWei(toBN(1E20)),
       contribsPrct: 70,
       rewardMdlAddr: rwdMdl.addr
     }

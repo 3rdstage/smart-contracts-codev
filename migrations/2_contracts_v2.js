@@ -57,6 +57,18 @@ module.exports = async function (deployer, network, accounts) {
   
   const mdlCnt = await prjMgr.getNumberOfRewardModels();
   console.debug(`Number of registered reward models: ${mdlCnt}`);
+  
+  const logs = [
+    {key: 'Target Network', value: network},
+    {key: "RegularERC20Token", value: RegularERC20Token.address},
+    {key: "ProjectManager", value: ProjectManager.address},
+    {key: "ProportionalRewardModel", value: ProportionalRewardModel.address},
+    {key: "EvenVoterRewardModel", value: EvenVoterRewardModel.address},
+    {key: "WinnerTakesAllModel", value: WinnerTakesAllModel.address},
+    {key: "Contributions", value: Contributions.address},
+    {key: "Votes", value: Votes.address}]
+  
+  console.table(logs);
   console.debug(`Finished contract deployment : ${Date.now() - startAt} milli-sec elapsed`);
 
 };

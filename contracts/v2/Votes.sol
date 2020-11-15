@@ -58,13 +58,12 @@ contract VotesL is Context, AccessControl{
         require(_votee != address(0), "Votes: Can't vote on ZERO address.");
         require(_amt > 0, "Votes: Voting ammount should be positive.");
 
-        // validation : project existence, contribution existence, voting right
-        require(projectManager.hasProject(_prjId), "Votes: There is no such project.");
-        require(contribsContract.hasContribution(_prjId, _votee), "Votes: The specified project has no contributions from the specified votee yet.");
-
+        // validation : project existence and state, contribution existence, voting right
         address vtr = _msgSender(); // voter
         ProjectL prj = ProjectL(projectManager.getProjectAddress(_prjId));
+        require(!prj.isRewarded(), "Votes: The specified project was rewarded already.");
         require(prj.hasVoter(vtr), "Votes: Message sender is not a voter for the specified project.");
+        require(contribsContract.hasContribution(_prjId, _votee), "Votes: The specified project has no contributions from the specified votee yet.");
         
         // check allowance
         require(token.allowance(vtr, address(projectManager)) >= _amt, "Votes: Token as much as voting amount should be approved to the project manager address before vote.");

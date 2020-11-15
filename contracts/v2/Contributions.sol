@@ -33,8 +33,8 @@ contract ContributionsL is Context, AccessControl{
     }
     
     function addOrUpdateContribution(uint256 _prjId, address _contributior, string memory _title) external onlyAdmin{
-        require(projectManager.hasProject(_prjId), "Contributions: There is no such project.");
         require(_contributior != address(0), "Contributions: Contributors address can't be ZERO address.");
+        require(!ProjectL(projectManager.getProjectAddress(_prjId)).isRewarded());
         
         bool exists = true;
         if(contribs[_prjId][_contributior].owner == address(0)) exists = false;
