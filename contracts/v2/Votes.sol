@@ -40,13 +40,13 @@ contract VotesL is Context, AccessControl{
     event Unvoted(uint256 indexed projectId, address indexed voter);
     
     modifier onlyAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Aadmin role is required to do this");
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Only admin.");
         _;
     }
     
     constructor(address _prjMgr, address _contribsCtr) public{
-        require(_prjMgr != address(0), "Contributions: Zero address can't be project manager contract.");
-        require(_contribsCtr != address(0), "Contributions: Zero address can't be contributions contract.");
+        require(_prjMgr != address(0), "Votes: Project manager can't be ZERO.");
+        require(_contribsCtr != address(0), "Votes: Contribs contract can't be ZERO.");
         
         projectManager = ProjectManagerL(_prjMgr);
         contribsContract = ContributionsL(_contribsCtr);
@@ -56,17 +56,17 @@ contract VotesL is Context, AccessControl{
     
     function vote(uint256 _prjId, address _votee, uint256 _amt) public{
         require(_votee != address(0), "Votes: Can't vote on ZERO address.");
-        require(_amt > 0, "Votes: Voting ammount should be positive.");
+        require(_amt > 0, "Votes: Require positive voting amount.");
 
         // validation : project existence and state, contribution existence, voting right
         address vtr = _msgSender(); // voter
         ProjectL prj = ProjectL(projectManager.getProjectAddress(_prjId));
-        require(!prj.isRewarded(), "Votes: The specified project was rewarded already.");
-        require(prj.hasVoter(vtr), "Votes: Message sender is not a voter for the specified project.");
-        require(contribsContract.hasContribution(_prjId, _votee), "Votes: The specified project has no contributions from the specified votee yet.");
+        require(!prj.isRewarded(), "Votes: Rewarded already.");
+        require(prj.hasVoter(vtr), "Votes: No voter for the project.");
+        require(contribsContract.hasContribution(_prjId, _votee), "Votes: No votee yet");
         
         // check allowance
-        require(token.allowance(vtr, address(projectManager)) >= _amt, "Votes: Token as much as voting amount should be approved to the project manager address before vote.");
+        require(token.allowance(vtr, address(projectManager)) >= _amt, "Votes: Token allowance shortage");
         // collect voting amount first
         projectManager.collectFrom(vtr, _amt);
 
@@ -87,7 +87,8 @@ contract VotesL is Context, AccessControl{
     
     // @TODO Not complete - remove or finish this.
     function unvote(uint256 _prjId) public{
-        require(projectManager.hasProject(_prjId), "Votes: There is no such project.");
+        require(projectManager.hasProject(_prjId), "Votes: No such project.");
+        require(!ProjectL(projectManager.getProjectAddress(_prjId)).isRewarded(), "Votes: Rewarded already.");
         
         _unvote(_prjId, _msgSender());
     }

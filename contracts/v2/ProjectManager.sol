@@ -20,11 +20,11 @@ contract ProjectManagerL is Context, AccessControl{
   
     RegularERC20TokenL private token;                  // token contract for reward
     
-    EnumerableMap.UintToAddressMap private projects;   // id:address map for project contracts
+    EnumerableMap.UintToAddressMap private projects;   // projects map (id => address)
     
-    mapping(address => string) private rewardModels;   // address:name map for reward models
+    mapping(address => string) private rewardModels;   // reward models map (address => name)
     
-    EnumerableSet.AddressSet private rewardModelAddrs; // keys for reward models' map - for safe access or iteration
+    EnumerableSet.AddressSet private rewardModelAddrs; // key-set for reward models map 
     
     VotesL private votesContract;                      // votes contract
 
@@ -34,18 +34,17 @@ contract ProjectManagerL is Context, AccessControl{
     
     event TokenCollected(address indexed from, uint256 amount);
     
-    //event VoteeRewarded(uint256 indexed projectId, address indexed votee, uint256 amount);
+    event VoteeRewarded(uint256 indexed projectId, address indexed votee, uint256 amount);
     
-    //event VoterRewarded(uint256 indexed projectId, address indexed voter, uint256 amount);
+    event VoterRewarded(uint256 indexed projectId, address indexed voter, uint256 amount);
 
 
     /**
-     * 
      * To distribute rewards, it is neccesary to grant MINTER_ROLE of the token to this project manager contract
      * outside of this contract usually at contract deploy time.
      */
     constructor(address _tknAddr) public{
-        require(_tknAddr != address(0), "Token address can NOT be ZERO address.");
+        require(_tknAddr != address(0), "Token address can't be ZERO.");
         token = RegularERC20TokenL(_tknAddr);    
         
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -56,17 +55,16 @@ contract ProjectManagerL is Context, AccessControl{
     }
 
     function setVotesContact(address _addr) external{
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Aadmin role is required to do this");
-        require(_addr != address(0), "Votes contract can't be ZERO address");
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Only admin.");
+        require(_addr != address(0), "Votes contract can't be ZERO.");
         
         votesContract = VotesL(_addr);
     }
 
     function createProject(uint256 _id, string memory _name, uint256 _totalReward, uint8 _contribsPerct, address _rewardModelAddr) external{
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Aadmin role is required.");
-        
-        require(!projects.contains(_id), "A project with the specified ID already exisits."); 
-        require(rewardModelAddrs.contains(_rewardModelAddr), "The specified reward model is NOT registered yet.");
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Only admin.");
+        require(!projects.contains(_id), "Duplicated project ID"); 
+        require(rewardModelAddrs.contains(_rewardModelAddr), "No such reward model registered.");
 
         ProjectL prj = new ProjectL(_id, _name, _totalReward, _contribsPerct, _rewardModelAddr);
         projects.set(_id, address(prj));
@@ -87,7 +85,7 @@ contract ProjectManagerL is Context, AccessControl{
     }
 
     function _findProject(uint256 _prjId) internal view returns (ProjectL){
-        require(projects.contains(_prjId), "There's no project with the specified project ID.");
+        require(projects.contains(_prjId), "No such project.");
         
         return ProjectL(projects.get(_prjId));
     }
@@ -98,20 +96,20 @@ contract ProjectManagerL is Context, AccessControl{
     }
     
     function registerRewardModels(address[] memory _modelAddrs) external{
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Aadmin role is required to do this");
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Only admin.");
 
         uint256 l = _modelAddrs.length;
         for(uint256 i = 0; i < l; i++) _registerRewardModel(_modelAddrs[i]);
     }
 
     function registerRewardModel(address _modelAddr) external{
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Aadmin role is required to do this");
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Only admin.");
 
         _registerRewardModel(_modelAddr);
     } 
     
     function _registerRewardModel(address _modelAddr) internal{
-        require(_modelAddr != address(0), "Zero address can't be reward model.");
+        require(_modelAddr != address(0), "Reward model can't be ZERO.");
         // allow re-register
         //require(!rewardModelAddrs.contains(_modelAddr), "ProjectManager: The reward model at the specified address was registered already.");
         
@@ -125,14 +123,14 @@ contract ProjectManagerL is Context, AccessControl{
     }
     
     function getRewardModel(uint256 _index) external view returns (address addr, string memory name){
-        require(_index < rewardModelAddrs.length(), "Index is too large." );
+        require(_index < rewardModelAddrs.length(), "Too large index." );
         
         (addr, name) = (rewardModelAddrs.at(_index), rewardModels[rewardModelAddrs.at(_index)]);
     }
     
 
     function assignProjectVoters(uint256 _prjId, address[] calldata _voters) external{
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Aadmin role is required to do this");
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Only admin.");
 
         _findProject(_prjId).assignVoters(_voters);
     }
@@ -179,30 +177,30 @@ contract ProjectManagerL is Context, AccessControl{
         Vote[] memory vts = votesContract.getVotesByProject(_prjId);
         Score[] memory scrs = votesContract.getScoresByProject(_prjId);
         
-        require(vts.length > 0, "There's no votes yet for the specified project.");
+        require(vts.length > 0, "Project has no vote yet.");
         
         (uint256 ttl, uint8 prct) = prj.getRewardPot();
         return IRewardModelL(prj.getRewardModelAddress()).calcRewards(RewardPot(ttl, prct), vts, scrs, 16);
     }
 
     function distributeRewards(uint256 _prjId) public{
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Aadmin role is required to do this");
-
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Only admin.");
+        
+        _findProject(_prjId).setRewarded();
         (Reward[] memory vteeRwds, Reward[] memory vterRwds, uint256 rmnd) = _simulateRewards(_prjId);
         
         uint256 l = vteeRwds.length;
         for(uint256 i = 0; i < l; i++){  // mint token to votees
             token.mint(vteeRwds[i].to, vteeRwds[i].amount);
-            //emit VoteeRewarded(_prjId, vteeRwds[i].to, vteeRwds[i].amount);
+            emit VoteeRewarded(_prjId, vteeRwds[i].to, vteeRwds[i].amount);
         }
         
         l = vterRwds.length;
         for(uint256 i = 0; i < l; i++){  // mint token to voters
             token.mint(vterRwds[i].to, vterRwds[i].amount);
-            //emit VoterRewarded(_prjId, vterRwds[i].to, vterRwds[i].amount);
+            emit VoterRewarded(_prjId, vterRwds[i].to, vterRwds[i].amount);
         }
 
         token.mint(address(this), rmnd);
-        //_findProject(_prjId).setRewarded();
     }
 }

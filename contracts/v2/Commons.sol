@@ -43,6 +43,4 @@ library RewardArrayLib{
             amounts[i] = _rewards[i].amount;
         }
     }
-    
-    
 }

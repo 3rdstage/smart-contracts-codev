@@ -21,19 +21,19 @@ contract ContributionsL is Context, AccessControl{
     event ContributionUpdated(uint256 indexed projectId, address indexed contributior);
 
     modifier onlyAdmin() {
-        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Aadmin role is required to do this");
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Only admin.");
         _;
     }
     
     constructor(address _prjMgr) public{
-        require(_prjMgr != address(0), "Contributions: Zero address can't be project manager contract.");
+        require(_prjMgr != address(0), "Contribs: Project manager can't be ZERO.");
         
         projectManager = ProjectManagerL(_prjMgr);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
     
     function addOrUpdateContribution(uint256 _prjId, address _contributior, string memory _title) external onlyAdmin{
-        require(_contributior != address(0), "Contributions: Contributors address can't be ZERO address.");
+        require(_contributior != address(0), "Contribs: Contributor can't be ZERO.");
         require(!ProjectL(projectManager.getProjectAddress(_prjId)).isRewarded());
         
         bool exists = true;
@@ -48,16 +48,16 @@ contract ContributionsL is Context, AccessControl{
     }
     
     function getContributorsByProject(uint256 _prjId) external view returns (address[] memory){
-        require(projectManager.hasProject(_prjId), "Contributions: There is no such project.");
+        require(projectManager.hasProject(_prjId), "Contribs: No such project.");
         
         return contributors[_prjId];        
     }
     
     function getContribution(uint256 _prjId, address _contributor) external view returns (string memory, string memory, bytes32){
-        require(projectManager.hasProject(_prjId), "Contributions: There is no such project.");
+        require(projectManager.hasProject(_prjId), "Contribs: No such project.");
         
         Contrib memory cntrb = contribs[_prjId][_contributor];
-        require(cntrb.owner != address(0), "Contributions: There is no contribution for specified project from specified contributor.");
+        require(cntrb.owner != address(0), "Contribs: No such contribution.");
         
         return (cntrb.title, cntrb.docUrl, cntrb.docHash);
     }

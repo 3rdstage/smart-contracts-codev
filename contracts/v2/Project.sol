@@ -49,9 +49,9 @@ contract ProjectL is Ownable{
     }
 
     function _setRewardPot(uint256 _total, uint8 _contribsPerct) internal{
-        require(_total > 0, "Project: Total reward should be positive.");
-        require(_contribsPerct > 0 && _contribsPerct < 100, "Project: The percentage for contributors should be between 0 and 100 exclusively.");
-        require(!rewarded, "Project: Reward plan can't be changed after rewards are distributed. - This project has been rewareded already.");
+        require(_total > 0, "Project: Require positie total reward.");
+        require(_contribsPerct > 0 && _contribsPerct < 100, "Project: Percentage range : (0, 100).");
+        require(!rewarded, "Project: Already rewarded.");
         
         rewardPot = RewardPot(_total, _contribsPerct); 
         emit RewardPotUpdated(id, _total, _contribsPerct);
@@ -66,8 +66,8 @@ contract ProjectL is Ownable{
     }
     
     function setRewardModel(address _addr) external onlyOwner{
-        require(_addr != address(0), "Project: Model address can't be ZERO address.");
-        require(!rewarded, "Project: Reward model can't be changed, because this project was already rewarded.");
+        require(_addr != address(0), "Project: Model address can't be ZERO.");
+        require(!rewarded, "Project: Already rewarded.");
         
         rewardModel = IRewardModelL(_addr);
         emit RewardModelDesignated(id, _addr);
@@ -82,8 +82,10 @@ contract ProjectL is Ownable{
     }
 
     function assignVoters(address[] calldata _voters) external onlyOwner{
+        require(!rewarded, "Project: Already rewarded.");
+
         uint256 l = _voters.length;
-        for(uint i = 0; i < l; i++) require(_voters[i] != address(0), "Project: Voter address can't be ZERO address.");
+        for(uint i = 0; i < l; i++) require(_voters[i] != address(0), "Project: Voter address can't be ZERO.");
         
         l = voters.length();
         address vter;
@@ -117,7 +119,7 @@ contract ProjectL is Ownable{
     }
 
     function setRewarded() external onlyOwner{
-        require(!rewarded, "Project: This project was already rewarded before.");
+        require(!rewarded, "Project: Already rewarded.");
         
         rewarded = true;
         emit RewardDistributed(id);
