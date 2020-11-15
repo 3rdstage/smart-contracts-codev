@@ -11,6 +11,10 @@ contract EvenVoterRewardModelL is ProportionalRewardModelL(1, 1){
 
     string private constant name = "Proportional rewards for votees and even rewards for voters";
 
+    function getName() external view virtual override returns (string memory){
+        return name;
+    }
+    
     function calcRewards(RewardPot calldata _rewardPot, Vote[] calldata _votes, Score[] calldata _scores, uint256 _floorAt) 
         external view override virtual returns (Reward[] memory voteeRewards, Reward[] memory voterRewards, uint256 remainder){
         

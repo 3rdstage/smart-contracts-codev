@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.6.0;
+pragma experimental ABIEncoderV2;
 
 struct Contrib{
     address owner;  // should never be ZERO address
@@ -27,4 +28,21 @@ struct RewardPot{
 struct Reward{
     address to;
     uint256 amount;
+}
+
+
+library RewardArrayLib{
+    
+    function toPrimitiveArrays(Reward[] memory _rewards) public pure returns (address[] memory winners, uint256[] memory amounts){
+        uint256 l = _rewards.length;
+        winners = new address[](l);
+        amounts = new uint256[](l);
+        
+        for(uint256 i = 0; i < l; i++){
+            winners[i] = _rewards[i].to;
+            amounts[i] = _rewards[i].amount;
+        }
+    }
+    
+    
 }

@@ -1,4 +1,5 @@
 const RegularERC20Token = artifacts.require("RegularERC20TokenL");
+const RewardArrayLib = artifacts.require("RewardArrayLib");
 const ProjectManager = artifacts.require("ProjectManagerL");
 const ProportionalRewardModel = artifacts.require("ProportionalRewardModelL");
 const EvenVoterRewardModel = artifacts.require("EvenVoterRewardModelL");
@@ -11,6 +12,9 @@ const Votes = artifacts.require("VotesL");
 module.exports = async function (deployer, network, accounts) {
   'use strict';
   
+  const voterIndexes = [6, 7, 8];
+  const voterInitBal = web3.utils.toBN(10E18);
+  
   console.debug('Starting to deploy 8 contracts');
   const startAt = Date.now();
   const admin = accounts[0];
@@ -18,6 +22,8 @@ module.exports = async function (deployer, network, accounts) {
 
   console.debug("Deploying 'Token' contract.");
   await deployer.deploy(RegularERC20Token, "Environment Social Value Token", "ESV", options);
+  await deployer.deploy(RewardArrayLib);
+  await deployer.link(RewardArrayLib, ProjectManager);
   
   console.debug("Deploying 'Project Manager' contract and 3 'Reward Model' contracts.")
   await deployer.deploy(ProjectManager, RegularERC20Token.address, options);
@@ -45,8 +51,8 @@ module.exports = async function (deployer, network, accounts) {
   await prjMgr.setVotesContact(Votes.address);
   
   console.debug("Mining initial balances to 3 voters");
-  for(const i of [6, 7, 8]){
-    await tkn.mint(accounts[i], web3.utils.toBN(50E18), options);
+  for(const i of voterIndexes){
+    await tkn.mint(accounts[i], voterInitBal, options);
   }
   
   const mdlCnt = await prjMgr.getNumberOfRewardModels();

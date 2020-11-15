@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.6.0;
 
-import "../../node_modules/@openzeppelin/contracts/GSN/Context.sol";
 import "../../node_modules/@openzeppelin/contracts/access/Ownable.sol";
 import "../../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
 import "./Commons.sol";

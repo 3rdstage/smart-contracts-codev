@@ -107,11 +107,11 @@ contract("'ProjectManager' contract uint tests", async accounts => {
     let mdl2 = null;
     const addrs2 = [], names2 = [];
     for(let i = 0; i < cnt; i++){
-      mdl2 = await prjMgr.getRewardModel(i)
-      addrs2.push(mdl2[0]); // address
-      names2.push(mdl2[1]); // name
+      mdl2 = await prjMgr.getRewardModel(i);
+      addrs2.push(mdl2.addr); // address
+      names2.push(mdl2.name); // name
     }
-  
+    
     assert.sameMembers(names, names2, "Wrong reward model is registered.");
     assert.sameMembers(addrs, addrs2, "Wrong reward model is registered."); 
     

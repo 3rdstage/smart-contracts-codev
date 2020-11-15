@@ -14,7 +14,7 @@ contract ProportionalRewardModelL is AbstractRewardModelL{
     
     uint256 private immutable voterBasePortion;
     
-    function getName() external view override returns (string memory){
+    function getName() external view virtual override returns (string memory){
         return name;
     }
     

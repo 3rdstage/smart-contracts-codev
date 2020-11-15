@@ -96,11 +96,10 @@ contract VotesL is Context, AccessControl{
     function _unvote(uint256 _prjId, address _voter) internal{
 
         Vote memory vt0 = votes[_prjId][_voter];
-        if(vt0.voter != address(0)){                  // has pervious vote
-            address vtee0 = vt0.votee;                // previous votee
-            uint256 amt0 = vt0.amount;                // previous vote amount
-            uint256 scr0 = scores[_prjId][vtee0];     // previous votee's current score
-            scores[_prjId][vtee0] = scr0.sub(amt0);   // update previous votee's score
+        if(vt0.voter != address(0)){                    // has pervious vote
+            uint256 amt0 = vt0.amount;                  // previous vote amount
+            uint256 scr0 = scores[_prjId][vt0.votee];   // previous votee's current score
+            scores[_prjId][vt0.votee] = scr0.sub(amt0); // update previous votee's score
             
             delete votes[_prjId][_voter];             // remove prev. vote from votes
             voters[_prjId].remove(_voter);            // update votes' key-set
@@ -114,8 +113,7 @@ contract VotesL is Context, AccessControl{
 
     function getVote(uint256 _prjId, address _voter) public view returns (address, uint256) {
         
-        Vote memory vt = votes[_prjId][_voter];
-        return (vt.votee, vt.amount);
+        return (votes[_prjId][_voter].votee, votes[_prjId][_voter].amount);
     }
     
     function getVotesByProject(uint256 _prjId) public view returns (Vote[] memory){ 

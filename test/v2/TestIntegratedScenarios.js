@@ -27,7 +27,12 @@ contract("Integrated test including vote, reward simulation and reward distribut
   }
   
   async function getAndPrintBalances(title, verbose = false){
-    const bals = votees.concat(voters);
+    //const bals = votees.concat(voters);
+    const bals = [];
+    
+    for(const v of votees) bals.push({no: v.no, name: v.name, addr: v.addr});
+    for(const v of voters) bals.push({no: v.no, name: v.name, addr: v.addr});
+    
     bals.push({name: 'project manager', 
                addr: prjMgrContr.address, 
                amount: await tokenContr.balanceOf(prjMgrContr.address)});
@@ -58,14 +63,14 @@ contract("Integrated test including vote, reward simulation and reward distribut
     votesContr = await Votes.deployed();
     
     for(const i of [0, 1, 2]){
-      votees.push({no: i, name: `votee.${i}`, addr: accounts[3 + i], balance: 0, esv: ''});
-      voters.push({no: i, name: `voter.${i}`, addr: accounts[6 + i], balance: 0, esv: ''});
+      votees.push({no: i, name: `votee.${i}`, addr: accounts[3 + i], amount: 0, esv: ''});
+      voters.push({no: i, name: `voter.${i}`, addr: accounts[6 + i], amount: 0, esv: ''});
     }
     
     //await getAndPrintBalances(`Initiall Token Balances`)
   });
   
-  async function executeScenario(prj, vteeAddrs, vts, vtTitle, verbose = false){
+  async function executeScenario(prj, vteeAddrs, vts, vtTitle, rwdsVrfyFunc, verbose = false){
     
     const [chance, admin, formatter] = await prepareFixtures();
     
@@ -153,7 +158,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
       let val = vts0.filter(e => e.voteeAddr == scr1.owner).reduce((acc, cur) => {return acc.add(cur.amount);}, toBN(0));
       assert.isTrue(toBN(scr1.value).eq(val));
     }
-    if(verbose) console.log('Votes are verified');
+    if(verbose) console.log('Votes are verified.');
 
     // Display queried votes and scores    
     const vts2 = []; // queried votes
@@ -162,7 +167,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
           votee: votees.find(e => e.addr == vt1.votee).name, esv: web3.utils.fromWei(vt1.amount)});
     }
     if(verbose){
-      console.log("\n[[ Votes Queried ]]");
+      console.log("\n[[ Votes Queried (after cast) ]]");
       console.table(vts2, ['project', 'voter', 'votee', 'esv']);
     }
     
@@ -178,16 +183,18 @@ contract("Integrated test including vote, reward simulation and reward distribut
     
     // Get balances after votes
     const bals1 = await getAndPrintBalances('Balances after Vote', verbose);
+    console.log(bals1);
+    console.log(bals0);
     
     // Verfiy balances
     for(const bal1 of bals1){
       // balance before vote
       let amt = bals0.find(e => e.addr == bal1.addr).amount;  
       
-      if(votees.includes(bal1.addr)){  
+      if(votees.map(e => e.addr).includes(bal1.addr)){  
         // for votee, balance is expected not to be changed
         assert.isTrue(bal1.amount.eq(amt)); 
-      }else if(voters.includes(bal1.addr)){
+      }else if(voters.mape.includes(bal1.addr)){
         assert.isTrue(bal1.amount.sub(vts0.find(e => e.voterAddr == bal1.addr).amount).eq(amt));
       }else if(bal1.name == 'project manager'){
         // sum of votes amounts
@@ -195,7 +202,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
         assert.isTrue(bal1.amount.eq(amt.add(sm)));
       }
     }
-    if(verbose) console.log('Balances are verified');
+    if(verbose) console.log("Balances after votes are verified. - Balances of only voters and project manager has changes.");
     
     
     const rslt = await prjMgrContr.simulateRewardsArrayRetuns(prj.id);
@@ -205,37 +212,64 @@ contract("Integrated test including vote, reward simulation and reward distribut
     for(const [i, vtee] of rslt.votees.entries()){
       amt = rslt.voteeRewards[i];
       rwds.push({name: votees.find(e => e.addr == vtee).name, addr: vtee, 
-        amount: formatter.format(amt), esv: web3.utils.fromWei(amt)});
+        amt: amt, amount: formatter.format(amt), esv: web3.utils.fromWei(amt)});
     }
     for(const [i, vter] of rslt.voters.entries()){
       amt = rslt.voterRewards[i];
       rwds.push({name: voters.find(e => e.addr == vter).name, addr: vter,
-        amount: formatter.format(amt), esv: web3.utils.fromWei(amt)});
+        amt: amt, amount: formatter.format(amt), esv: web3.utils.fromWei(amt)});
     }
     rwds.sort(function(e1, e2){
       const n1 = e1.name, n2 = e2.name;
       if(n1 > n2){ return 1; }else if(n1 < n2){ return -1; }else{ return 0; }
     })
     
-    rwds.push({name: 'remainder', amount: formatter.format(rslt.remainder), esv: web3.utils.fromWei(rslt.remainder)});
-    
+    rwds.push({name: 'remainder', amt: toBN(rslt.remainder),
+        amount: formatter.format(rslt.remainder), esv: web3.utils.fromWei(rslt.remainder)});
+
     if(verbose){
       console.log("\n[[ Rewards Simulated ]]");
       console.table(rwds, ['addr', 'name', 'amount', 'esv']);
     }
+
+    rwdsVrfyFunc(rwds);
     
-    return rwds;
+    if(verbose) console.log("Distributing rewards.")    
+    await prjMgrContr.distributeRewards(prj.id);
+    
+    const bals2 = await getAndPrintBalances("Balances after Reward Distribution", verbose);
+    
+    console.log(bals2);
+    console.log(bals1);
+    console.log(bals0);
+    
+    for(const bal2 of bals2){
+      let bal1 = bals1.find(e => e.addr == bal2.addr); // balance aftrer vote
+    
+      let amt; // reward amount 
+      if(votees.includes(bal2.addr) || voters.includes(bal2.addr)){ // for votee or voter
+        amt = rwds.find(e => e.addr == bal2.addr).amt;
+        assert.isTrue(bal1.amount.add(amt).eq(bal2.amount));
+      }else{ // project manager
+        amt = rwds.find(e => e.name == 'remainder').amt;
+        console.log(amt);
+        console.log(bal1);
+        console.log(bal2);
+        assert.isTrue(bal1.amount.add(amt).eq(bal2.amount));
+      }
+    }
+    if(verbose) console.log('Balances after rewards distribution are verified !!!');
   }
   
   
-  it("Can follow corretly the 1st scenario of which contest defined.", async() => {
+  it.only("Can follow corretly the 1st scenario of which contest defined.", async() => {
     
     const [chance, admin] = await prepareFixtures();
     const rwdMdl = await prjMgrContr.getRewardModel(0);
     
     const epc = Date.now();
     const prj = {
-      id: epc.toString().substring(3), 
+      id: epc.toString().substring(5), 
       name: 'Prj 1', 
       totalReward: toBN(1E20),
       totalRewardESV: web3.utils.fromWei(toBN(1E20)),
@@ -248,25 +282,29 @@ contract("Integrated test including vote, reward simulation and reward distribut
     vts.push({voterAddr: voters[0].addr, voteeAddr: vteeAddrs[0], amount: toBN(3E18)});
     vts.push({voterAddr: voters[1].addr, voteeAddr: vteeAddrs[0], amount: toBN(3E18)});
     vts.push({voterAddr: voters[2].addr, voteeAddr: vteeAddrs[1], amount: toBN(4E18)});
- 
-    const rwds = await executeScenario(prj, vteeAddrs, vts, "Scenario 1 (Contest Scenario)", true);
-    
-    /*
-     * Expected rewards
-     *
-     *   votee.0 : 42 ESV        votee.1 : 28 ESV 
-     *   voter.0 : 10.3846 ESV   voter.1 : 10.3846 ESV   voter.2 : 9.2308   
-     */
-    assert.equal(rwds.find(e => e.addr == votees[0].addr).esv, 42);
-    assert.equal(rwds.find(e => e.addr == votees[1].addr).esv, 28);
-    assert.approximately(Number.parseFloat(rwds.find(e => e.addr == voters[0].addr).esv), 10.38, 0.01);
-    assert.approximately(Number.parseFloat(rwds.find(e => e.addr == voters[1].addr).esv), 10.38, 0.01);
-    assert.approximately(Number.parseFloat(rwds.find(e => e.addr == voters[2].addr).esv), 9.23, 0.01);
-    
-    // verify total reward
-    assert.approximately(rwds.reduce((acc, cur) => { return acc + Number.parseFloat(cur.esv); }, 0), 100, 0.01);
-    console.log("Simulated rewards are verified.");
         
+    const rwdsVrfyFunc = function(rwds){
+      /*
+       * Expected rewards
+       *
+       *   votee.0 : 42 ESV        votee.1 : 28 ESV 
+       *   voter.0 : 10.3846 ESV   voter.1 : 10.3846 ESV   voter.2 : 9.2308   
+       */
+      assert.equal(rwds.find(e => e.addr == votees[0].addr).esv, 42);
+      assert.equal(rwds.find(e => e.addr == votees[1].addr).esv, 28);
+      assert.approximately(Number.parseFloat(rwds.find(e => e.addr == voters[0].addr).esv), 10.38, 0.01);
+      assert.approximately(Number.parseFloat(rwds.find(e => e.addr == voters[1].addr).esv), 10.38, 0.01);
+      assert.approximately(Number.parseFloat(rwds.find(e => e.addr == voters[2].addr).esv), 9.23, 0.01);
+      
+      // verify total reward
+      assert.approximately(rwds.reduce((acc, cur) => { return acc + Number.parseFloat(cur.esv); }, 0), 100, 0.01);
+      console.log("Simulated rewards are verified.");
+    
+    };
+    
+    await executeScenario(
+        prj, vteeAddrs, vts, "Scenario 1 (Contest Scenario)", rwdsVrfyFunc, true);
+    
   });
   
   it("Can follow corretly the 2nd scenario.", async() => {
@@ -276,7 +314,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
     
     const epc = Date.now();
     const prj = {
-      id: epc.toString().substring(3), 
+      id: epc.toString().substring(5), 
       name: 'Prj 2', 
       totalReward: toBN(1E20),
       totalRewardESV: web3.utils.fromWei(toBN(1E20)),
@@ -289,26 +327,27 @@ contract("Integrated test including vote, reward simulation and reward distribut
     vts.push({voterAddr: voters[0].addr, voteeAddr: vteeAddrs[0], amount: toBN(3E18)});
     vts.push({voterAddr: voters[1].addr, voteeAddr: vteeAddrs[0], amount: toBN(3E18)});
     vts.push({voterAddr: voters[2].addr, voteeAddr: vteeAddrs[1], amount: toBN(6E18)});
- 
-    const rwds = await executeScenario(prj, vteeAddrs, vts, "Scenario 2", true); 
+
+    const rwdsVrfyFunc = function(rwds){
+      /*
+       * Expected rewards
+       *
+       *   votee.0 : 35 ESV    votee.1 : 35 ESV 
+       *   voter.0 : 7.5 ESV   voter.1 : 7.5 ESV   voter.2 : 15 ESV  
+       */
+      assert.equal(rwds.find(e => e.addr == votees[0].addr).esv, 35);
+      assert.equal(rwds.find(e => e.addr == votees[1].addr).esv, 35);
+      assert.equal(rwds.find(e => e.addr == voters[0].addr).esv, 7.5);
+      assert.equal(rwds.find(e => e.addr == voters[1].addr).esv, 7.5);
+      assert.equal(rwds.find(e => e.addr == voters[2].addr).esv, 15);
+      assert.equal(rwds.find(e => e.name == 'remainder').amount, 0);  // 0 remainer
+      
+      // verify total reward
+      assert.approximately(rwds.reduce((acc, cur) => { return acc + Number.parseFloat(cur.esv); }, 0), 100, 0.01);
+      console.log("Simulated rewards are verified.");
+    };
     
-    /*
-     * Expected rewards
-     *
-     *   votee.0 : 35 ESV    votee.1 : 35 ESV 
-     *   voter.0 : 7.5 ESV   voter.1 : 7.5 ESV   voter.2 : 15 ESV  
-     */
-    assert.equal(rwds.find(e => e.addr == votees[0].addr).esv, 35);
-    assert.equal(rwds.find(e => e.addr == votees[1].addr).esv, 35);
-    assert.equal(rwds.find(e => e.addr == voters[0].addr).esv, 7.5);
-    assert.equal(rwds.find(e => e.addr == voters[1].addr).esv, 7.5);
-    assert.equal(rwds.find(e => e.addr == voters[2].addr).esv, 15);
-    assert.equal(rwds.find(e => e.name == 'remainder').amount, 0);  // 0 remainer
-    
-    // verify total reward
-    assert.approximately(rwds.reduce((acc, cur) => { return acc + Number.parseFloat(cur.esv); }, 0), 100, 0.01);
-    console.log("Simulated rewards are verified.");
-        
+    await executeScenario(prj, vteeAddrs, vts, "Scenario 2", rwdsVrfyFunc, true); 
   });
   
   it("Can vote according to scenario 3", async() => {
@@ -318,7 +357,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
     
     const epc = Date.now();
     const prj = {
-      id: epc.toString().substring(3), 
+      id: epc.toString().substring(5), 
       name: 'Prj 3', 
       totalReward: toBN(1E20),
       totalRewardESV: web3.utils.fromWei(toBN(1E20)),
@@ -331,26 +370,28 @@ contract("Integrated test including vote, reward simulation and reward distribut
     vts.push({voterAddr: voters[0].addr, voteeAddr: vteeAddrs[0], amount: toBN(3E18)});
     vts.push({voterAddr: voters[1].addr, voteeAddr: vteeAddrs[0], amount: toBN(3E18)});
     vts.push({voterAddr: voters[2].addr, voteeAddr: vteeAddrs[0], amount: toBN(4E18)});
- 
-    const rwds = await executeScenario(prj, vteeAddrs, vts, "Scenario 3", true); 
+
+    const rwdsVrfyFunc = function(rwds){
+      /*
+       * Expected rewards
+       *
+       *   votee.0 : 70 ESV   votee.1 : 0 ESV 
+      *   voter.0 : 9 ESV    voter.1 : 9 ESV   voter.2 : 12 ESVß   
+      */
+      assert.equal(rwds.find(e => e.addr == votees[0].addr).esv, 70);
+      //assert.equal(rwds.find(e => e.addr == votees[1].addr).esv, 0);
+      assert.equal(rwds.find(e => e.addr == voters[0].addr).esv, 9);
+      assert.equal(rwds.find(e => e.addr == voters[1].addr).esv, 9);
+      assert.equal(rwds.find(e => e.addr == voters[2].addr).esv, 12);
+      assert.equal(rwds.find(e => e.name == 'remainder').amount, 0);  // 0 remainer
+      
+      // verify total reward
+      assert.approximately(rwds.reduce((acc, cur) => { return acc + Number.parseFloat(cur.esv); }, 0), 100, 0.01);
+      console.log("Simulated rewards are verified.");
+    };
     
-    /*
-     * Expected rewards
-     *
-     *   votee.0 : 70 ESV   votee.1 : 0 ESV 
-     *   voter.0 : 9 ESV    voter.1 : 9 ESV   voter.2 : 12 ESVß   
-     */
-    assert.equal(rwds.find(e => e.addr == votees[0].addr).esv, 70);
-    //assert.equal(rwds.find(e => e.addr == votees[1].addr).esv, 0);
-    assert.equal(rwds.find(e => e.addr == voters[0].addr).esv, 9);
-    assert.equal(rwds.find(e => e.addr == voters[1].addr).esv, 9);
-    assert.equal(rwds.find(e => e.addr == voters[2].addr).esv, 12);
-    assert.equal(rwds.find(e => e.name == 'remainder').amount, 0);  // 0 remainer
-    
-    // verify total reward
-    assert.approximately(rwds.reduce((acc, cur) => { return acc + Number.parseFloat(cur.esv); }, 0), 100, 0.01);
-    console.log("Simulated rewards are verified.");
-        
+    await executeScenario(prj, vteeAddrs, vts, "Scenario 3", rwdsVrfyFunc, true); 
+     
   });  
   
   it("Can vote according to scenario 4", async() => {
@@ -360,7 +401,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
     
     const epc = Date.now();
     const prj = {
-      id: epc.toString().substring(3), 
+      id: epc.toString().substring(5), 
       name: 'Prj 4', 
       totalReward: toBN(1E20),
       totalRewardESV: web3.utils.fromWei(toBN(1E20)),
@@ -374,24 +415,27 @@ contract("Integrated test including vote, reward simulation and reward distribut
     vts.push({voterAddr: voters[1].addr, voteeAddr: vteeAddrs[2], amount: toBN(3E18)});
     vts.push({voterAddr: voters[2].addr, voteeAddr: vteeAddrs[0], amount: toBN(4E18)});
  
-    const rwds = await executeScenario(prj, vteeAddrs, vts, "Scenario 4", true); 
+    const rwdsVrfyFunc = function(rwds){
+      /*
+       * Expected rewards
+       *
+       *   votee.0 : 20 ESV   votee.1 : 35 ESV        votee.2 : 15 ESV 
+       *   voter.0 : 18 ESV   voter.1 : 5.1429 ESV    voter.2 : 6.8571 ESV
+       */
+      assert.equal(rwds.find(e => e.addr == votees[0].addr).esv, 20);
+      assert.equal(rwds.find(e => e.addr == votees[1].addr).esv, 35);
+      assert.equal(rwds.find(e => e.addr == votees[2].addr).esv, 15);
+      assert.equal(rwds.find(e => e.addr == voters[0].addr).esv, 18);
+      assert.approximately(Number.parseFloat(rwds.find(e => e.addr == voters[1].addr).esv), 5.14, 0.01);
+      assert.approximately(Number.parseFloat(rwds.find(e => e.addr == voters[2].addr).esv), 6.85, 0.01);
+      
+      // verify total reward
+      assert.approximately(rwds.reduce((acc, cur) => { return acc + Number.parseFloat(cur.esv); }, 0), 100, 0.01);
+      console.log("Simulated rewards are verified.");
+    };
     
-    /*
-     * Expected rewards
-     *
-     *   votee.0 : 20 ESV   votee.1 : 35 ESV        votee.2 : 15 ESV 
-     *   voter.0 : 18 ESV   voter.1 : 5.1429 ESV    voter.2 : 6.8571 ESV
-     */
-    assert.equal(rwds.find(e => e.addr == votees[0].addr).esv, 20);
-    assert.equal(rwds.find(e => e.addr == votees[1].addr).esv, 35);
-    assert.equal(rwds.find(e => e.addr == votees[2].addr).esv, 15);
-    assert.equal(rwds.find(e => e.addr == voters[0].addr).esv, 18);
-    assert.approximately(Number.parseFloat(rwds.find(e => e.addr == voters[1].addr).esv), 5.14, 0.01);
-    assert.approximately(Number.parseFloat(rwds.find(e => e.addr == voters[2].addr).esv), 6.85, 0.01);
-    
-    // verify total reward
-    assert.approximately(rwds.reduce((acc, cur) => { return acc + Number.parseFloat(cur.esv); }, 0), 100, 0.01);
-    console.log("Simulated rewards are verified.");
+    await executeScenario(prj, vteeAddrs, vts, "Scenario 4", rwdsVrfyFunc, true); 
+
   });    
  
 });

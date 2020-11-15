@@ -170,6 +170,5 @@ contract.skip("'Sample' contract uint tests", async accounts => {
     
     await expectRevert.unspecified(sampleContr.testRevertAndEvent());
   });
-  
 
 });

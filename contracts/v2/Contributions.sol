@@ -4,7 +4,6 @@ pragma solidity ^0.6.0;
 import "../../node_modules/@openzeppelin/contracts/GSN/Context.sol";
 import "../../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
 import "../../node_modules/@openzeppelin/contracts/utils/EnumerableMap.sol";
-import "../../node_modules/@openzeppelin/contracts/utils/Counters.sol";
 import "./Commons.sol";
 import "./ProjectManager.sol";
 
@@ -33,7 +32,7 @@ contract ContributionsL is Context, AccessControl{
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
     
-    function addOrUpdateContribution(uint256 _prjId, address _contributior, string memory _title) public onlyAdmin{
+    function addOrUpdateContribution(uint256 _prjId, address _contributior, string memory _title) external onlyAdmin{
         require(projectManager.hasProject(_prjId), "Contributions: There is no such project.");
         require(_contributior != address(0), "Contributions: Contributors address can't be ZERO address.");
         
@@ -48,13 +47,13 @@ contract ContributionsL is Context, AccessControl{
         }
     }
     
-    function getContributorsByProject(uint256 _prjId) public view returns (address[] memory){
+    function getContributorsByProject(uint256 _prjId) external view returns (address[] memory){
         require(projectManager.hasProject(_prjId), "Contributions: There is no such project.");
         
         return contributors[_prjId];        
     }
     
-    function getContribution(uint256 _prjId, address _contributor) public view returns (string memory, string memory, bytes32){
+    function getContribution(uint256 _prjId, address _contributor) external view returns (string memory, string memory, bytes32){
         require(projectManager.hasProject(_prjId), "Contributions: There is no such project.");
         
         Contrib memory cntrb = contribs[_prjId][_contributor];
@@ -63,7 +62,7 @@ contract ContributionsL is Context, AccessControl{
         return (cntrb.title, cntrb.docUrl, cntrb.docHash);
     }
     
-    function hasContribution(uint256 _prjId, address _contributor) public view returns (bool){
+    function hasContribution(uint256 _prjId, address _contributor) external view returns (bool){
         if(!projectManager.hasProject(_prjId)) return false;
         
         if(contribs[_prjId][_contributor].owner == address(0)) return false;

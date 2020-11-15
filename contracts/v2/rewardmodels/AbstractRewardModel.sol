@@ -11,7 +11,6 @@ abstract contract AbstractRewardModelL is IRewardModelL{
     
     uint256 public constant FLOOR_AT_MAX = 18;
 
-
     function _calcRemainder(uint256 _totalRwd, Reward[] memory _vteeRwds, Reward[] memory _vterRwds) 
         internal pure returns (uint256){
         
