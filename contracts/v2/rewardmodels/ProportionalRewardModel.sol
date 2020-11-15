@@ -3,14 +3,11 @@ pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
 import "../../../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
-import "../../../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
-import "../IRewardModel.sol";
+import "./AbstractRewardModel.sol";
 
-
-contract ProportionalRewardModelL is IRewardModelL{
+contract ProportionalRewardModelL is AbstractRewardModelL{
     using SafeMath for uint256;
-    //using EnumerableSet for EnumerableSet.AddressSet;
-    
+
     string private constant name = "Proportionally rewarded model";
     
     uint256 private immutable voterHighPortion;
@@ -28,13 +25,14 @@ contract ProportionalRewardModelL is IRewardModelL{
         voterBasePortion = _vtrBasePort;
     }
 
-    function calcRewards(RewardPot calldata _rewardPot, Vote[] calldata _votes, Score[] calldata _scores) 
+    function calcRewards(RewardPot calldata _rewardPot, Vote[] calldata _votes, Score[] calldata _scores, uint256 _floorAt) 
         external view override virtual returns (Reward[] memory voteeRewards, Reward[] memory voterRewards, uint256 remainder){
-        
-        require(_scores.length > 0, "ProportionalRewardModel: The specified votee scores are empty.");
-        require(_votes.length > 0, "ProportionalRewardModel: The speified votes are empty.");
+
         require(_rewardPot.total > 0, "ProportionalRewardModel: The specified total reward is ZERO.");
         require(_rewardPot.contribsPercent > 0 && _rewardPot.contribsPercent < 100, "ProportionalRewardModel: The percentage for contributors should be between 0 and 100 exclusively.");
+        require(_votes.length > 0, "ProportionalRewardModel: The speified votes are empty.");
+        require(_scores.length > 0, "ProportionalRewardModel: The specified votee scores are empty.");
+        require(_floorAt <= FLOOR_AT_MAX, "ProportionalRewardModel: Too much high floor position - It should be less than or equal to 18");
 
         // calculate votees' rewards first based on scores
         uint256 vteeTotal = _rewardPot.total.mul(_rewardPot.contribsPercent).div(100);  // total reward amount for votees
@@ -68,6 +66,11 @@ contract ProportionalRewardModelL is IRewardModelL{
         // calc voters' rewards
         //Vote[] memory vts = _votes;              // local copy to avoid 'stack too deep'
         voterRewards = _calcVoterRewards(_rewardPot.total.sub(vteeTotal), topVtees, _votes);
+        
+        if(_floorAt > 0){
+            _floor(voteeRewards, _floorAt);
+            _floor(voterRewards, _floorAt);
+        }
         
         // calc remainder
         remainder = _calcRemainder(_rewardPot.total, voteeRewards, voterRewards);
@@ -118,17 +121,6 @@ contract ProportionalRewardModelL is IRewardModelL{
         }
     }
     
-    function _calcRemainder(uint256 _totalRwd, Reward[] memory _vteeRwds, Reward[] memory _vterRwds) 
-        internal pure returns (uint256){
-        
-        uint256 rmder = _totalRwd;
-        uint256 l = _vteeRwds.length;   // votees number
-        for(uint256 i = 0; i < l; i++) rmder = rmder.sub(_vteeRwds[i].amount);
 
-        l = _vterRwds.length;            // voters number
-        for(uint256 i = 0; i < l; i++) rmder = rmder.sub(_vterRwds[i].amount);
-
-        return rmder;
-    }
 
 }

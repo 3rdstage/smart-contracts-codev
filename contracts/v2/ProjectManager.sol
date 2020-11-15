@@ -228,7 +228,7 @@ contract ProjectManagerL is Context, AccessControl{
         
         (uint256 ttl, uint8 prct) = prj.getRewardPot();
         RewardPot memory scl = RewardPot(ttl, prct);
-        return mdl.calcRewards(scl, vts, scrs);
+        return mdl.calcRewards(scl, vts, scrs, 16);
     }
 
     function distrubteRewards(uint256 _prjId) public onlyAdmin{

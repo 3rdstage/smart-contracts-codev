@@ -2,10 +2,10 @@
 pragma solidity ^0.6.0;
 pragma experimental ABIEncoderV2;
 
-import "../IRewardModel.sol";
+import "./AbstractRewardModel.sol";
 
 
-contract Top2RewardedModelL is IRewardModelL{
+contract Top2RewardedModelL is AbstractRewardModelL{
     
     string private constant name = "Top 2 voters are rewarded model";
 
@@ -13,7 +13,7 @@ contract Top2RewardedModelL is IRewardModelL{
         return name;
     }
 
-    function calcRewards(RewardPot calldata _rewardPot, Vote[] calldata _votes, Score[] calldata _scores) 
+    function calcRewards(RewardPot calldata _rewardPot, Vote[] calldata _votes, Score[] calldata _scores, uint256 _floorAt) 
         external view override virtual returns (Reward[] memory voterRewards, Reward[] memory voteeRewards, uint256 remainder){
     
         bool impled;

@@ -1,3 +1,73 @@
+## 프로젝트 산출물 구성
+
+2020년 4회 경연대회 주제 2 "SK Hynix JDP 환경성과 기여에 따른 Reward 제공" 구현 프로젝트로 다음과 같은 산출을을 포함합니다.
+
+| Directory | File | 설명 | 비고 |
+| --------- | ---- | --- | --- |
+| `/`             |     |     |     |
+|                 | `truffle-config`   | Truffle 환경설정 파일 |   |   |
+|                 | `package.json`     | `npm`의 package 정의 파일 |   |   |
+| `contracts/v2/` |     |     |     |
+|                 | `Commons.sol`      | 모든 smart contract 들에서 공통으로 사용하는 구조체(`struct`)들을 정의 |   |
+|                 | `Contribution.sol` | 프로젝트에 참여한 각 기업의 참여/***기여*** 데이터를 저장하고 관련 기능을 수행하는 smart contract |   |
+|                 | `IRewardModel.sol` | 투표에 따른 ***보상***(reward)를 계산하는 다양한 pluggable smart contract들을 위한 ***interface*** 정의 |   |
+|                 | `Project.sol`      | 개별 ***프로젝트*** 데이터를 저장하는 smart contract |   |
+|                 | `ProjectManager.sol` | 프로젝트 생성 및 전체적으로 workflow 수준의 기능을 수행하는 mamager smart contract |   |
+|                 | `Votes.sol`        | 전체 ***투표*** 데이터를 저장하고 투표 관련 기능을 수행하는 smart contract |   |
+| `contracts/v2/rewardmodels` |     |     |
+|                 | `EvenVoterRewardModel.sol` | 기여자들에게는 득표에 비례하는 보상을 지급하고, 투표자들에게는 균등하게 보상을 지급하는 모델 |   |
+|                 | `EvenVoterRewardModel.sol` |   |   |   |
+| `test/v2/`      |     |     |     |
+|                 | `TestContribution.js`        | `Contribution` contrac 단위 테스트 |   |
+|                 | `TestIntegratedScenarios.js` | 경연대회 시나리오를 포함하여 몇몇 시나리오들을 검증하는 통합 테스트 |   |
+|                 | `TestProject.js'             | `Project` contract 단위 테스트 |   |
+|                 | `TestProjectManager.js`      | `ProjectManager` contract 단위 테스트 |   |
+
+----
+
+## 시작하기 (Getting Started)
+
+
+
+
+### 시나리오
+
+* 모든 시나리오에서 총상금 : **100 ESV**, 기여자 총상금 비율: **70 %**
+
+* ***Scenario 1***
+    * 경연 공식 시나리오
+        
+        | Votee     | Score | Reward |
+        | --------- | ----- | ------ |
+        | `votee.0` |     6 |     42 |    
+        | `votee.1` |     4 |     28 |
+        | sum       |    10 |     70 |
+        
+        | Voter     | Votes For | Amount | Portion | Reward |
+        | --------- | --------- | ------ | ------- | ------ |
+        | `voter.0` | `votee.0` |      3 |     1.5 |  10.38 |
+        | `voter.1` | `votee.0` |      3 |     1.5 |  10.38 |
+        | `voter.2` | `votee.1` |      4 |     1.0 |   9.23 |
+        | sum       |           |     10 |         |  29.99 |
+
+
+* ***Scenario 2***
+    * 2명의 투표 대상자가 동점인 경우 
+        | Votee     | Score | Reward |
+        | --------- | ----- | ------ |
+        | `votee.0` |     6 |     35 |    
+        | `votee.1` |     6 |     35 |
+        | sum       |    12 |     70 |
+        
+        | Voter     | Votes For | Amount | Portion | Reward |
+        | --------- | --------- | ------ | ------- | ------ |
+        | `voter.0` | `votee.0` |      3 |     1.5 |    7.5 |
+        | `voter.1` | `votee.0` |      3 |     1.5 |    7.5 |
+        | `voter.2` | `votee.1` |      6 |     1.5 |   15.0 |
+        | sum       |           |     12 |         |   30.0 |        
+
+
+
 ## Features 
 
 | Cateogry | Feature | Description |

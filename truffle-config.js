@@ -67,7 +67,8 @@ module.exports = {
       //gas: 200000000,
       gasPrice: 0,
       websockets: false,
-      skipDryRun: true
+      skipDryRun: true,
+      deploymentPollingInterval: 10000  // in milli-sec
     },
   },
 
@@ -90,7 +91,7 @@ module.exports = {
           enabled: false,
           runs: 200
         },
-        evmVersion: "constantinople"
+        evmVersion: "constantinople"   // berlin, istanbul, petersburg, constantinople, byzantium
       }
     },
   },

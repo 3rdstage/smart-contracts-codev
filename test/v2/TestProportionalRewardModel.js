@@ -13,6 +13,7 @@ contract("'ProportionalRewardModel' contract uint tests", async accounts => {
 
   const votees = []; // fill in the `before` function
   const voters = []; // fill in the `before` function
+  const floorAt = 16;
 
   async function prepareFixtures(deployed = true){
  
@@ -59,11 +60,11 @@ contract("'ProportionalRewardModel' contract uint tests", async accounts => {
     scrs.push({owner: votees[0], value: toBN(6E18).toString()});
     scrs.push({owner: votees[1], value: toBN(4E18).toString()});
     
-    const rslt = await rwdModel.calcRewards(rwdPot, vts, scrs);
+    const rslt = await rwdModel.calcRewards(rwdPot, vts, scrs, floorAt);
     
     assert.equal(scrs.length, rslt.voteeRewards.length);
     assert.equal(vts.length, rslt.voterRewards.length);
-    assert.isAtLeast(rslt.remainder.toNumber(), 0);
+    assert.isTrue(rslt.remainder.gtn(0));
     assert.isTrue(toBN(42E18).eq(toBN(rslt.voteeRewards[0].amount)));
     assert.isTrue(toBN(28E18).eq(toBN(rslt.voteeRewards[1].amount)));
     
@@ -74,7 +75,7 @@ contract("'ProportionalRewardModel' contract uint tests", async accounts => {
     let amt = 0;
     for(let i = 0; i < rslt.voterRewards.length; i++){
       amt = toBN(rslt.voterRewards[i].amount);
-      assert.isTrue(amt.gt(rngs[i][0]) && amt.lt(rngs[i][1]));
+      assert.isTrue(amt.gte(rngs[i][0]) && amt.lte(rngs[i][1]));
     }
     
     let sm = toBN(rslt.remainder);
@@ -98,11 +99,11 @@ contract("'ProportionalRewardModel' contract uint tests", async accounts => {
     scrs.push({owner: votees[0], value: toBN(6E18).toString()});
     scrs.push({owner: votees[1], value: toBN(6E18).toString()});
     
-    const rslt = await rwdModel.calcRewards(rwdPot, vts, scrs);
+    const rslt = await rwdModel.calcRewards(rwdPot, vts, scrs, floorAt);
     
     assert.equal(scrs.length, rslt.voteeRewards.length);
     assert.equal(vts.length, rslt.voterRewards.length);
-    assert.isAtLeast(rslt.remainder.toNumber(), 0);
+    assert.isTrue(rslt.remainder.gten(0));
     assert.isTrue(toBN(35E18).eq(toBN(rslt.voteeRewards[0].amount)));
     assert.isTrue(toBN(35E18).eq(toBN(rslt.voteeRewards[1].amount)));
     
@@ -132,11 +133,11 @@ contract("'ProportionalRewardModel' contract uint tests", async accounts => {
     scrs.push({owner: votees[0], value: toBN(10E18).toString()});
     scrs.push({owner: votees[1], value: toBN(0).toString()});
     
-    const rslt = await rwdModel.calcRewards(rwdPot, vts, scrs);
+    const rslt = await rwdModel.calcRewards(rwdPot, vts, scrs, floorAt);
     
     assert.equal(scrs.length, rslt.voteeRewards.length);
     assert.equal(vts.length, rslt.voterRewards.length);
-    assert.isAtLeast(rslt.remainder.toNumber(), 0);
+    assert.isTrue(rslt.remainder.gten(0));
     assert.isTrue(toBN(70E18).eq(toBN(rslt.voteeRewards[0].amount)));
     assert.isTrue(toBN(0).eq(toBN(rslt.voteeRewards[1].amount)));
     
@@ -167,11 +168,11 @@ contract("'ProportionalRewardModel' contract uint tests", async accounts => {
     scrs.push({owner: votees[1], value: toBN(7E18).toString()});
     scrs.push({owner: votees[2], value: toBN(3E18).toString()});
     
-    const rslt = await rwdModel.calcRewards(rwdPot, vts, scrs);
+    const rslt = await rwdModel.calcRewards(rwdPot, vts, scrs, floorAt);
     
     assert.equal(scrs.length, rslt.voteeRewards.length);
     assert.equal(vts.length, rslt.voterRewards.length);
-    assert.isAtLeast(rslt.remainder.toNumber(), 0);
+    assert.isTrue(rslt.remainder.gtn(0));
     assert.isTrue(toBN(20E18).eq(toBN(rslt.voteeRewards[0].amount)));
     assert.isTrue(toBN(35E18).eq(toBN(rslt.voteeRewards[1].amount)));
     assert.isTrue(toBN(15E18).eq(toBN(rslt.voteeRewards[2].amount)));
