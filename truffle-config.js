@@ -24,7 +24,7 @@ const prodHttpOptions = {
   ]
 };
 
-const testHttpOptions = { keepAlive: true, timeout: 70000 }
+const testHttpOptions = { keepAlive: true, timeout: 150000, withCredentials: false }
 
 
 // http://truffleframework.com/docs/advanced/configuration
@@ -83,7 +83,7 @@ module.exports = {
   // http://truffleframework.com/docs/advanced/configuration
   compilers: {
     solc: {
-      version: "^0.6.0",
+      version: "0.6.12",
       //version: "0.6.12",
       //parser: "solcjs",
       settings: {
