@@ -88,7 +88,7 @@ contract VotesL is Context, AccessControl{
     // @TODO Not complete - remove or finish this.
     function unvote(uint256 _prjId) public{
         require(projectManager.hasProject(_prjId), "Votes: No such project.");
-        require(!ProjectL(projectManager.getProjectAddress(_prjId)).isRewarded(), "Votes: Rewarded already.");
+        require(!(ProjectL(projectManager.getProjectAddress(_prjId)).isRewarded()), "Votes: Rewarded already.");
         
         _unvote(_prjId, _msgSender());
     }

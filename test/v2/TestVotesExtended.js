@@ -60,7 +60,7 @@ contract("'Votes' contract uint tests suite 2", async accounts => {
     //await getAndPrintBalances(`Initiall Token Balances`)
   });
   
-  it.skip("Can vote again or unvote.", async() => {
+  it.skip("Can ...", async() => {
     
     const bals0 = await getAndPrintBalances(`Token Balances before Vote`);
     

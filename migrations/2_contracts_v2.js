@@ -60,6 +60,7 @@ module.exports = async function (deployer, network, accounts) {
   
   const logs = [
     {key: 'Target Network', value: network},
+    {key: "Accounts[0]", value: accounts[0]},
     {key: "RegularERC20Token", value: RegularERC20Token.address},
     {key: "ProjectManager", value: ProjectManager.address},
     {key: "ProportionalRewardModel", value: ProportionalRewardModel.address},

@@ -43,7 +43,7 @@ module.exports = {
       host: ganache.host,
       port: ganache.port,
       network_id: "*",
-      gas: 4E7,
+      //gas: 4E7,
       gasPrice: 2E10,
     },
     

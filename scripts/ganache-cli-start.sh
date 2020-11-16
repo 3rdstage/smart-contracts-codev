@@ -4,7 +4,7 @@
 #   - Check the availability of the TCP port for Linux
 #   - Setup 'logrotate' for Linux
 
-readonly verbose=1  # 1: true, 0: false - Hard coded yet
+readonly verbose=0  # 1: true, 0: false - Hard coded yet
 readonly dryrun=0   # 1: true, 0: false - Not Used Yet
 readonly uname=`uname -s`  # OS type
 readonly script_dir=$(cd `dirname $0` && pwd)
@@ -158,13 +158,13 @@ else
     echo "'BIP39_MNEMONIC' env. variable is defined, so it will be used."
     cmd="${cmd} --mnemonic '$BIP39_MNEMONIC'"
   fi
-  cmd="${cmd} --defaultBalanceEther 10000 --accounts 10 --secure"
+  cmd="${cmd} --defaultBalanceEther 10000 --accounts 10"
 fi
 
 cmd="${cmd} --unlock 0 --unlock 1 --unlock 2 --unlock 3 --unlock 4 \
             --hardfork 'petersburg' \
             --blockTime 0 \
-            --db '${data_dir}' >> '${log_dir}'/ganache.log 2>&1"
+            --db '${data_dir}'"
 
 if [ "$uname" == "Linux" ]; then
   cmd="sudo sh -c \"$cmd\""

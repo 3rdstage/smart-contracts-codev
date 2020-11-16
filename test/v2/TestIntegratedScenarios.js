@@ -1,5 +1,6 @@
 const RegularERC20Token = artifacts.require("RegularERC20TokenL");
 const ProjectManager = artifacts.require("ProjectManagerL");
+const Project = artifacts.require("ProjectL");
 const Contributions = artifacts.require("ContributionsL");
 const Votes = artifacts.require("VotesL");
 const Chance = require('chance');
@@ -73,7 +74,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
     //await getAndPrintBalances(`Initiall Token Balances`)
   });
   
-  async function executeScenario(prj, vteeAddrs, vts, vtTitle, rwdsVrfyFunc, verbose = false){
+  async function verifyScenario(prj, vteeAddrs, vts, vtTitle, rwdsVrfyFunc, verbose = false){
     
     const [chance, admin, formatter] = await prepareFixtures();
     
@@ -233,7 +234,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
     rwdsVrfyFunc(rwds);
     
     if(verbose) console.log("Distributing rewards.")    
-    await prjMgrContr.distributeRewards(prj.id);
+    await prjMgrContr.distributeRewards(prj.id, {from: admin});
     
     // Verify balances after rewards distribution
     const bals2 = await getAndPrintBalances("Balances after Reward Distribution", verbose);
@@ -257,7 +258,21 @@ contract("Integrated test including vote, reward simulation and reward distribut
     assert.isTrue(ttlSpply0.add(prj.totalReward).eq(ttlSpply2));
     if(verbose){
       console.log(`Token total supply change : ${fromWei(ttlSpply0)} ESV -> ${fromWei(ttlSpply2)} ESV (+${fromWei(prj.totalReward)})`);
-      console.log(`${vtTitle} has been completed successfuly.\n`);
+      console.log(`Checking the post-conditions of the project.`);
+    }
+    
+    // Check whether the project is closed or not
+    await expectRevert.unspecified(prjMgrContr.assignProjectVoters(prj.id, voters.map(e => e.addr), {from: admin}));
+    const prjContr = await Project.at(await prjMgrContr.getProjectAddress(prj.id));
+    assert.isTrue(await prjContr.isRewarded())
+    await expectRevert.unspecified(cntrbsContr.addOrUpdateContribution(prj.id, votees[0].addr, "N/A", {from: admin}));
+    await expectRevert.unspecified(votesContr.vote(prj.id, vts0[0].voteeAddr, toBN(2E18), {from: vts0[0].voterAddr}));
+    await expectRevert.unspecified(votesContr.unvote(prj.id, {from: vts0[vts0.length - 1].voterAddr}));
+    await expectRevert.unspecified(prjMgrContr.distributeRewards(prj.id, {from: admin}));
+  
+    if(verbose){
+      console.log(`Project '${prj.id}' has been closed correctly. - No more contribution, vote, and reward distribution.`);
+      console.log(`${vtTitle} has been completed successfuly !!!\n`);
     }
   }
   
@@ -301,7 +316,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
     
     };
     
-    await executeScenario(
+    await verifyScenario(
         prj, vteeAddrs, vts, "Scenario 1 (Contest Scenario)", rwdsVrfyFunc, true);
     
   });
@@ -346,7 +361,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
       console.log("Simulated rewards are verified.");
     };
     
-    await executeScenario(prj, vteeAddrs, vts, "Scenario 2", rwdsVrfyFunc, true); 
+    await verifyScenario(prj, vteeAddrs, vts, "Scenario 2", rwdsVrfyFunc, true); 
   });
   
   it("Can vote according to scenario 3", async() => {
@@ -389,7 +404,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
       console.log("Simulated rewards are verified.");
     };
     
-    await executeScenario(prj, vteeAddrs, vts, "Scenario 3", rwdsVrfyFunc, true); 
+    await verifyScenario(prj, vteeAddrs, vts, "Scenario 3", rwdsVrfyFunc, true); 
      
   });  
   
@@ -433,7 +448,7 @@ contract("Integrated test including vote, reward simulation and reward distribut
       console.log("Simulated rewards are verified.");
     };
     
-    await executeScenario(prj, vteeAddrs, vts, "Scenario 4", rwdsVrfyFunc, true); 
+    await verifyScenario(prj, vteeAddrs, vts, "Scenario 4", rwdsVrfyFunc, true); 
 
   });    
  
