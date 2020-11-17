@@ -6,7 +6,6 @@ import "../../node_modules/@openzeppelin/contracts/GSN/Context.sol";
 import "../../node_modules/@openzeppelin/contracts/math/SafeMath.sol";
 import "../../node_modules/@openzeppelin/contracts/access/AccessControl.sol";
 import "../../node_modules/@openzeppelin/contracts/utils/EnumerableSet.sol";
-import "../../node_modules/@openzeppelin/contracts/utils/Counters.sol";
 import "./tokens/RegularERC20Token.sol";
 import "./Commons.sol";
 import "./ProjectManager.sol";
