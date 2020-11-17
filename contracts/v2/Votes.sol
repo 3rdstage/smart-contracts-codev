@@ -66,11 +66,15 @@ contract VotesL is Context, AccessControl{
         
         // check allowance
         require(token.allowance(vtr, address(projectManager)) >= _amt, "Votes: Token allowance shortage");
-        // collect voting amount first
-        projectManager.collectFrom(vtr, _amt);
-
+        
+        bool unvoted = false;
+        uint256 amt0 = 0;
         // unvote first if necessary
-        if(votes[_prjId][vtr].voter != address(0)) _unvote(_prjId, vtr);
+        if(votes[_prjId][vtr].voter != address(0)){
+          amt0 = votes[_prjId][vtr].amount;
+          _unvote(_prjId, vtr);
+          unvoted = true;
+        } 
 
         uint256 scr1 = scores[_prjId][_votee];    // votee's current score
         scores[_prjId][_votee] = scr1.add(_amt);  // update votee's score
@@ -81,6 +85,10 @@ contract VotesL is Context, AccessControl{
         voters[_prjId].add(vtr);
         
         emit Voted(_prjId, vtr, _votee, _amt, scores[_prjId][_votee]);
+        // collect voting amount first
+        if(unvoted) token.transferFrom(address(projectManager), vtr, amt0);  // refund previous voting amount
+        projectManager.collectFrom(vtr, _amt);
+
     }
     
     
@@ -90,6 +98,7 @@ contract VotesL is Context, AccessControl{
         require(!(ProjectL(projectManager.getProjectAddress(_prjId)).isRewarded()), "Votes: Rewarded already.");
         
         _unvote(_prjId, _msgSender());
+        token.transferFrom(address(projectManager), _msgSender(), votes[_prjId][_msgSender()].amount);  // refund previous voting amount
     }
     
     function _unvote(uint256 _prjId, address _voter) internal{
@@ -103,7 +112,6 @@ contract VotesL is Context, AccessControl{
             delete votes[_prjId][_voter];             // remove prev. vote from votes
             voters[_prjId].remove(_voter);            // update votes' key-set
             
-            token.transferFrom(address(projectManager), _voter, amt0);  // refund previous voting amount
             emit Unvoted(_prjId, _voter);
         }else{
             emit NoPreviousVote(_prjId, _voter);
